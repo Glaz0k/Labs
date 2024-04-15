@@ -150,4 +150,4 @@ inline void QueueArray<T>::swap(QueueArray<T>& other) noexcept
 	std::swap(tail_, other.tail_);
 }
 
-#endif // !QUEUE_ARRAY_H
+#endif

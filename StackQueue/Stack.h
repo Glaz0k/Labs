@@ -36,4 +36,4 @@ class WrongStackSize : public std::exception
 	}
 };
 
-#endif // !STACK_H
+#endif

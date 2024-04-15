@@ -132,4 +132,4 @@ inline void StackArray<T>::swap(StackArray<T>& other) noexcept
 	std::swap(head_, other.head_);
 }
 
-#endif // !STACK_ARRAY_H
+#endif

@@ -36,4 +36,4 @@ class WrongQueueSize : public std::exception
 	}
 };
 
-#endif // !QUEUE_H
+#endif

@@ -3,4 +3,4 @@
 
 bool checkBalanceBrackets(const char* text, const int maxDeep);
 
-#endif // !STACK_UTILS_H
+#endif
