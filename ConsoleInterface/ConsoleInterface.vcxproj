@@ -134,6 +134,8 @@
     <Text Include="input.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\DataStructIO\delimiterI.hpp" />
+    <ClInclude Include="..\DataStructIO\streamGuard.hpp" />
     <ClInclude Include="Shapes.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

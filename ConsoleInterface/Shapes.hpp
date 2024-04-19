@@ -17,6 +17,7 @@ namespace kravchenko
     {
         std::vector< Point > points;
     };
+    std::istream& operator>>(std::istream& in, Polygon& poly);
 }
 
 #endif
