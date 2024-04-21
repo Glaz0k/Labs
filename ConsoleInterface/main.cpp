@@ -2,7 +2,7 @@
 #include <fstream>
 #include "PolygonHandler.hpp"
 
-// RMECHO && RIGHTSHAPES
+// RMECHO tick && RIGHTSHAPES tick
 
 int main(int argc, char* argv[])
 {
@@ -12,14 +12,14 @@ int main(int argc, char* argv[])
         return 1;
     }
     // std::fstream file(argv[1]);
-    std::fstream file("inputRmEcho.txt");
+    std::fstream file("input.txt");
     if (!file.is_open())
     {
         std::cerr << "File cannot be opened\n";
         return 2;
     }
     using namespace kravchenko;
-    
+
     PolygonHandler polygonsFromFile;
     polygonsFromFile.inputData(file);
     polygonsFromFile.handleCommands(std::cin, std::cout);

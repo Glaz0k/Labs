@@ -53,18 +53,31 @@ namespace kravchenko
     {
         void operator()(std::vector< Polygon >& data, std::istream& in, std::ostream& out);
     };
-    struct AccumulateCountIf
+    struct CountEvenOdd
     {
-        std::size_t operator()(std::size_t acc, const Polygon& p, bool isEven);
+        bool operator()(const Polygon& p, bool isEven);
     };
-    struct AccumulateCountNumOfVertex
+    struct CountNumOfVertex
     {
-        std::size_t operator()(std::size_t acc, const Polygon& p, std::size_t numOfVertexes);
+        bool operator()(const Polygon& p, std::size_t numOfVertexes);
     };
 
     struct RmEcho
     {
         void operator()(std::vector< Polygon >& data, std::istream& in, std::ostream& out);
+    };
+    struct ConsecutiveIdenticalPolygon
+    {
+        bool operator()(const Polygon& p1, const Polygon& p2, const Polygon& compared);
+    };
+
+    struct RightShapes
+    {
+        void operator()(std::vector< Polygon >& data, std::istream& in, std::ostream& out);
+    };
+    struct CountRightPolygons
+    {
+        bool operator()(const Polygon& p);
     };
 }
 

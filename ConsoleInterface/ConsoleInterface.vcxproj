@@ -134,6 +134,7 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="input.txt" />
+    <Text Include="inputRightShapes.txt" />
     <Text Include="inputRmEcho.txt" />
   </ItemGroup>
   <ItemGroup>

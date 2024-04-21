@@ -76,35 +76,43 @@ std::ostream& kravchenko::operator<<(std::ostream& out, const Polygon& p)
     return out;
 }
 
-std::vector< kravchenko::Polygon::Triangle > kravchenko::Polygon::getComponentTriangles() const
-{
-    using namespace std::placeholders;
-    std::vector< Triangle > triangles;
-    triangles.reserve(points.size() - 2);
-    auto getTriangle = std::bind(Triangle::getTriangle, points[0], _1, _2);
-    auto secondPoint = std::next(points.cbegin());
-    auto thirdPoint = std::next(secondPoint);
-    std::transform(thirdPoint, points.cend(), secondPoint, std::back_inserter(triangles), getTriangle);
-    return triangles;
-}
-
-kravchenko::Polygon::Triangle kravchenko::Polygon::Triangle::getTriangle(const Point& a, const Point& b, const Point& c)
-{
-    return Triangle{ a, b, c };
-}
-
-double kravchenko::Polygon::Triangle::getArea() const
-{
-    return 0.5 * std::abs((p2.x - p1.x) * (p3.y - p1.y) - (p3.x - p1.x) * (p2.y - p1.y));
-}
-
 double kravchenko::Polygon::getArea() const
 {
-    std::vector< Triangle > triangles = getComponentTriangles();
-    return std::accumulate(triangles.cbegin(), triangles.cend(), 0.0, Polygon::AccumulateTriangleArea{});
+    using namespace std::placeholders;
+    auto areaAcc = std::bind(Polygon::AccumulateArea{ points[1] }, _1, _2, points[0]);
+    return std::accumulate(points.cbegin(), points.cend(), 0.0, areaAcc);
 }
 
-double kravchenko::Polygon::AccumulateTriangleArea::operator()(double acc, const Triangle& t)
+bool kravchenko::Polygon::isIdentical(const Polygon& other) const
 {
-    return acc + t.getArea();
+    if (points.size() != other.points.size())
+        return false;
+    return (std::mismatch(points.cbegin(), points.cend(), other.points.cbegin()).first == points.cend());
+}
+
+bool kravchenko::Polygon::hasRightAngle() const
+{
+    auto pred = CheckRightAngle{ points[points.size() - 2], points[points.size() - 1] };
+    return (std::find_if(points.cbegin(), points.cend(), pred) != points.cend());
+}
+
+double kravchenko::Polygon::AccumulateArea::operator()(double acc, const Point& p2, const Point& p3)
+{
+    acc += 0.5 * std::abs((p2.x - p1.x) * (p3.y - p1.y) - (p3.x - p1.x) * (p2.y - p1.y));
+    p1 = p2;
+    return acc;
+}
+
+bool kravchenko::Point::operator==(const Point& other) const
+{
+    return (x == other.x) && (y == other.y);
+}
+
+bool kravchenko::Polygon::CheckRightAngle::operator()(const Point& side2)
+{
+    Point vec1{ apex.x - side1.x, apex.y - side1.y };
+    Point vec2{ apex.x - side2.x, apex.y - side2.y };
+    side1 = apex;
+    apex = side2;
+    return ((vec1.x * vec2.x + vec1.y * vec2.y) == 0);
 }

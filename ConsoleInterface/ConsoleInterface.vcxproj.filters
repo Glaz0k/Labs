@@ -35,6 +35,9 @@
     <Text Include="inputRmEcho.txt">
       <Filter>Resource Files</Filter>
     </Text>
+    <Text Include="inputRightShapes.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Polygon.hpp">

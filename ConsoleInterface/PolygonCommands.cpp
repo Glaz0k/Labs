@@ -3,6 +3,7 @@
 #include <numeric>
 #include <iomanip>
 #include <limits>
+#include <algorithm>
 // #include "..\DataStructIO\streamGuard.hpp"
 
 const std::map< std::string, std::function< void(std::vector< kravchenko::Polygon >&, std::istream&, std::ostream&) > >& kravchenko::getPolygonCommands()
@@ -14,7 +15,8 @@ const std::map< std::string, std::function< void(std::vector< kravchenko::Polygo
         { "MAX", std::bind(MinMax{}, _1, _2, _3, false) },
         { "MIN", std::bind(MinMax{}, _1, _2, _3, true) },
         { "COUNT", Count{} },
-        { "RMECHO", RmEcho{} }
+        { "RMECHO", RmEcho{} },
+        { "RIGHTSHAPES", RightShapes{} }
     };
     return commands;
 }
@@ -26,10 +28,10 @@ const char* kravchenko::InvalidCommand::what() const noexcept
 
 void kravchenko::Area::operator()(std::vector< Polygon >& data, std::istream& in, std::ostream& out)
 {
-    using namespace std::placeholders;
     std::string arg;
     in >> arg;
     std::function< double(double, const Polygon&) > getArea;
+    using namespace std::placeholders;
     if (arg == "EVEN")
     {
         getArea = std::bind(AccumulateAreaEvenOdd{}, _1, _2, true);
@@ -46,7 +48,7 @@ void kravchenko::Area::operator()(std::vector< Polygon >& data, std::istream& in
     {
         getArea = std::bind(AccumulateAreaNumOfVertex{}, _1, _2, std::stoull(arg));
     }
-    catch (...)
+    catch (const std::invalid_argument&)
     {
         throw InvalidCommand();
     }
@@ -80,9 +82,9 @@ double kravchenko::AccumulateAreaNumOfVertex::operator()(double acc, const Polyg
 
 void kravchenko::MinMax::operator()(std::vector< Polygon >& data, std::istream& in, std::ostream& out, bool isMin)
 {
-    using namespace std::placeholders;
     std::string arg;
     in >> arg;
+    using namespace std::placeholders;
     if (arg == "AREA")
     {
         auto maxArea = std::bind(AccumulateMinMaxArea{}, _1, _2, isMin);
@@ -115,45 +117,37 @@ std::size_t kravchenko::AccumulateMinMaxVertexes::operator()(std::size_t acc, co
 
 void kravchenko::Count::operator()(std::vector< Polygon >& data, std::istream& in, std::ostream& out)
 {
-    using namespace std::placeholders;
     std::string arg;
     in >> arg;
-    std::function< std::size_t(std::size_t, const Polygon&) > getCount;
+    std::function< bool(const Polygon&) > countPred;
+    using namespace std::placeholders;
     if (arg == "EVEN")
     {
-        getCount = std::bind(AccumulateCountIf{}, _1, _2, true);
+        countPred = std::bind(CountEvenOdd{}, _1, true);
     }
     else if (arg == "ODD")
     {
-        getCount = std::bind(AccumulateCountIf{}, _1, _2, false);
+        countPred = std::bind(CountEvenOdd{}, _1, false);
     }
     else try
     {
-        getCount = std::bind(AccumulateCountNumOfVertex{}, _1, _2, std::stoull(arg));
+        countPred = std::bind(CountNumOfVertex{}, _1, std::stoull(arg));
     }
-    catch (...)
+    catch (const std::invalid_argument&)
     {
         throw InvalidCommand();
     }
-    out << std::accumulate(data.cbegin(), data.cend(), 0, getCount);
+    out << std::count_if(data.cbegin(), data.cend(), countPred);
 }
 
-std::size_t kravchenko::AccumulateCountIf::operator()(std::size_t acc, const Polygon& p, bool isEven)
+bool kravchenko::CountEvenOdd::operator()(const Polygon& p, bool isEven)
 {
-    if (isEven == (p.points.size() % 2 == 0))
-    {
-        acc++;
-    }
-    return acc;
+    return (isEven == (p.points.size() % 2 == 0));
 }
 
-std::size_t kravchenko::AccumulateCountNumOfVertex::operator()(std::size_t acc, const Polygon& p, std::size_t numOfVertexes)
+bool kravchenko::CountNumOfVertex::operator()(const Polygon& p, std::size_t numOfVertexes)
 {
-    if (p.points.size()  == numOfVertexes)
-    {
-        acc++;
-    }
-    return acc;
+    return (p.points.size() == numOfVertexes);
 }
 
 void kravchenko::RmEcho::operator()(std::vector< Polygon >& data, std::istream& in, std::ostream& out)
@@ -162,13 +156,31 @@ void kravchenko::RmEcho::operator()(std::vector< Polygon >& data, std::istream& 
     in >> arg;
     if (in)
     {
-        // std::adjacent_find
-        // *operator==(Polygon && Point)
-        // std::remove_if
-        // std::accumulate
+        using namespace std::placeholders;
+        auto identicalPred = std::bind(ConsecutiveIdenticalPolygon{}, _1, _2, arg);
+        auto last = std::unique(data.begin(), data.end(), identicalPred);
+        auto erasedNum = std::distance(last, data.end());
+        data.erase(last, data.end());
+        out << erasedNum;
     }
     else
     {
         throw InvalidCommand();
     }
+}
+
+bool kravchenko::ConsecutiveIdenticalPolygon::operator()(const Polygon& p1, const Polygon& p2, const Polygon& compared)
+{
+    return (compared.isIdentical(p1) && compared.isIdentical(p2));
+}
+
+void kravchenko::RightShapes::operator()(std::vector< Polygon >& data, std::istream& in, std::ostream& out)
+{
+    using namespace std::placeholders;
+    out << std::count_if(data.cbegin(), data.cend(), CountRightPolygons{});
+}
+
+bool kravchenko::CountRightPolygons::operator()(const Polygon& p)
+{
+    return p.hasRightAngle();
 }
