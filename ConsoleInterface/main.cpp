@@ -1,5 +1,8 @@
 #include <iostream>
 #include <fstream>
+#include "PolygonHandler.hpp"
+
+// RMECHO && RIGHTSHAPES
 
 int main(int argc, char* argv[])
 {
@@ -8,13 +11,19 @@ int main(int argc, char* argv[])
         std::cerr << "Required filename argument\n";
         return 1;
     }
-    std::fstream inputFile(argv[1]);
-    if (!inputFile.is_open())
+    // std::fstream file(argv[1]);
+    std::fstream file("inputRmEcho.txt");
+    if (!file.is_open())
     {
         std::cerr << "File cannot be opened\n";
         return 2;
     }
+    using namespace kravchenko;
+    
+    PolygonHandler polygonsFromFile;
+    polygonsFromFile.inputData(file);
+    polygonsFromFile.handleCommands(std::cin, std::cout);
 
-    inputFile.close();
+    file.close();
     return 0;
 }
