@@ -21,7 +21,7 @@ int main(int argc, char* argv[])
     using namespace kravchenko;
 
     PolygonHandler polygonsFromFile;
-    polygonsFromFile.inputData(file);
+    polygonsFromFile.inputPolygons(file);
     polygonsFromFile.handleCommands(std::cin, std::cout);
 
     file.close();

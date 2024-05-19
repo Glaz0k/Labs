@@ -4,32 +4,16 @@
 #include <iomanip>
 #include <limits>
 #include <algorithm>
+#include <exception>
+#include <functional>
+#include "PolygonHandler.hpp"
 // #include "..\DataStructIO\streamGuard.hpp"
 
-const std::map< std::string, std::function< void(std::vector< kravchenko::Polygon >&, std::istream&, std::ostream&) > >& kravchenko::getPolygonCommands()
-{
-    using namespace std::placeholders;
-    static std::map< std::string, std::function< void(std::vector< kravchenko::Polygon >&, std::istream&, std::ostream&) > > commands
-    {
-        { "AREA", Area{} },
-        { "MAX", std::bind(MinMax{}, _1, _2, _3, false) },
-        { "MIN", std::bind(MinMax{}, _1, _2, _3, true) },
-        { "COUNT", Count{} },
-        { "RMECHO", RmEcho{} },
-        { "RIGHTSHAPES", RightShapes{} }
-    };
-    return commands;
-}
 
-const char* kravchenko::InvalidCommand::what() const noexcept
-{
-    return "<INVALID COMMAND>";
-}
-
-void kravchenko::Area::operator()(std::vector< Polygon >& data, std::istream& in, std::ostream& out)
+void kravchenko::Area::operator()(CommandArguments& args)
 {
     std::string arg;
-    in >> arg;
+    args.in >> arg;
     std::function< double(double, const Polygon&) > getArea;
     using namespace std::placeholders;
     if (arg == "EVEN")
@@ -42,7 +26,7 @@ void kravchenko::Area::operator()(std::vector< Polygon >& data, std::istream& in
     }
     else if (arg == "MEAN")
     {
-        getArea = std::bind(AccumulateAreaMean{ data.size() }, _1, _2);
+        getArea = std::bind(AccumulateAreaMean{ args.data.size() }, _1, _2);
     }
     else try
     {
@@ -53,8 +37,8 @@ void kravchenko::Area::operator()(std::vector< Polygon >& data, std::istream& in
         throw InvalidCommand();
     }
     // StreamGuard guard(out);
-    out << std::setprecision(1) << std::fixed;
-    out << std::accumulate(data.cbegin(), data.cend(), 0.0, getArea);
+    args.out << std::setprecision(1) << std::fixed;
+    args.out << std::accumulate(args.data.cbegin(), args.data.cend(), 0.0, getArea);
 }
 
 double kravchenko::AccumulateAreaEvenOdd::operator()(double acc, const Polygon& p, bool isEven)

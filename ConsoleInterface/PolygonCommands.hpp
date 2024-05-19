@@ -1,26 +1,16 @@
 #ifndef POLYGON_COMMANDS_HPP
 #define POLYGON_COMMANDS_HPP
 
-#include <map>
-#include <istream>
+#include <iostream>
 #include <vector>
-#include <functional>
-#include <exception>
 #include "Polygon.hpp"
+#include "PolygonHandler.hpp"
 
 namespace kravchenko
 {
-    const std::map< std::string, std::function< void(std::vector< kravchenko::Polygon >&, std::istream&, std::ostream&) > >& getPolygonCommands();
-
-    class InvalidCommand : std::exception
-    {
-    public:
-        const char* what() const noexcept;
-    };
-
     struct Area
     {
-        void operator()(std::vector< Polygon >& data, std::istream& in, std::ostream& out);
+        void operator()(CommandArguments& args);
     };
     struct AccumulateAreaEvenOdd
     {
@@ -36,10 +26,9 @@ namespace kravchenko
         double operator()(double acc, const Polygon& p, std::size_t numOfVertexes);
     };
 
-    struct MinMax
-    {
-        void operator()(std::vector< Polygon >& data, std::istream& in, std::ostream& out, bool isMin);
-    };
+    template< bool isMin >
+    void MinMax(std::vector< Polygon >& data, std::istream& in, std::ostream& out);
+
     struct AccumulateMinMaxArea
     {
         double operator()(double acc, const Polygon& p, bool isMin);
