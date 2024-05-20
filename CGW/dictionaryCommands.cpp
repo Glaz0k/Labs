@@ -2,6 +2,7 @@
 #include <fstream>
 #include <limits>
 #include "validWord.hpp"
+#include "dictionaryInteractions.hpp"
 
 void kravchenko::cmdScanText(cmd::CmdStreams s, std::map<std::string, FrequencyDictionary>& data)
 {
@@ -18,7 +19,7 @@ void kravchenko::cmdScanText(cmd::CmdStreams s, std::map<std::string, FrequencyD
     }
 
     FrequencyDictionary& saveDict = data[dictName];
-    while (file)
+    while (!file.eof())
     {
         std::string word;
         if (file >> ValidWord{ word })
@@ -87,7 +88,7 @@ void kravchenko::cmdSave(cmd::CmdStreams s, const std::map<std::string, Frequenc
             s.in >> argument;
             if (data.find(argument) == data.cend())
             {
-                throw std::invalid_argument("<INVALID COMMAND");
+                throw std::invalid_argument("<INVALID COMMAND>");
             }
             dictNames.push_back(argument);
         }
@@ -109,7 +110,6 @@ void kravchenko::cmdSave(cmd::CmdStreams s, const std::map<std::string, Frequenc
     }
 }
 
-/*
 void kravchenko::cmdFreq(cmd::CmdStreams s, const std::map<std::string, FrequencyDictionary>& data, const cmd::FreqArgs& args)
 {
     std::string argument;
@@ -122,6 +122,44 @@ void kravchenko::cmdFreq(cmd::CmdStreams s, const std::map<std::string, Frequenc
     {
         throw std::invalid_argument("<INVALID COMMAND>");
     }
+}
+
+void kravchenko::cmdIntersect(cmd::CmdStreams s, std::map<std::string, FrequencyDictionary>& data)
+{
+    std::string newDictName;
+    s.in >> newDictName;
+    if (data.find(newDictName) != data.cend())
+    {
+        throw std::invalid_argument("<INVALID COMMAND>");
+    }
+
+    std::vector< std::string > dictNames;
+    while (s.in.peek() != '\n')
+    {
+        std::string argument;
+        s.in >> argument;
+        if (data.find(argument) == data.cend())
+        {
+            throw std::invalid_argument("<INVALID COMMAND>");
+        }
+        dictNames.push_back(argument);
+    }
+    if (dictNames.size() < 2)
+    {
+        throw std::invalid_argument("<INVALID COMMAND>");
+    }
+
+    FrequencyDictionary newDict;
+    dictIntersect(data[dictNames[0]], data[dictNames[1]], newDict);
+    auto intersectPred = [&](const std::pair< std::string, FrequencyDictionary >& dictP) {
+        dictIntersect(newDict, dictP.second, newDict);
+    };
+    std::for_each(std::next(data.cbegin(), 2), data.cend(), intersectPred);
+    if (newDict.size() == 0)
+    {
+        throw std::invalid_argument("<NO INTERSECTION>");
+    }
+    data[newDictName] = newDict;
 }
 
 void kravchenko::cmd::freqWord(cmd::CmdStreams s, const std::map<std::string, FrequencyDictionary>& data)
@@ -142,7 +180,7 @@ void kravchenko::cmd::freqWord(cmd::CmdStreams s, const std::map<std::string, Fr
     }
 }
 
-void kravchenko::cmd::freqLeast(cmd::CmdStreams s, const std::map<std::string, FrequencyDictionary>& data)
+void kravchenko::cmd::freqLeast(CmdStreams s, const std::map<std::string, FrequencyDictionary>& data)
 {
     freqPredicate(s, data, std::less< size_t >{});
 }
@@ -151,4 +189,3 @@ void kravchenko::cmd::freqMost(cmd::CmdStreams s, const std::map<std::string, Fr
 {
     freqPredicate(s, data, std::greater< size_t >{});
 }
-*/

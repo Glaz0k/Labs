@@ -11,9 +11,9 @@ int main(int argc, char* argv[])
     cmd::FreqArgs freqArgs;
     {
         using namespace std::placeholders;
-        // freqArgs["WORD"] = cmd::freqWord;
-        // freqArgs["LEAST"];
-        // freqArgs["MOST"];
+        freqArgs["WORD"] = cmd::freqWord;
+        freqArgs["LEAST"] = cmd::freqLeast;
+        freqArgs["MOST"] = cmd::freqMost;
     }
 
     std::map< std::string, std::function< void(cmd::CmdStreams) > > cmds;
@@ -24,11 +24,30 @@ int main(int argc, char* argv[])
         cmds["REMOVE"] = std::bind(cmdRemove, _1, std::ref(dictionaries));
         cmds["LIST"] = std::bind(cmdList, _1, std::cref(dictionaries));
         cmds["SAVE"] = std::bind(cmdSave, _1, std::cref(dictionaries));
-        // cmds["FREQ"] = std::bind(cmdFreq, _1, std::cref(dictionaries), std::cref(freqArgs));
-        // cmds["INTERSECT"] = std::bind(cmdIntersect, _1, std::ref(dictionaries));
+        cmds["FREQ"] = std::bind(cmdFreq, _1, std::cref(dictionaries), std::cref(freqArgs));
+        cmds["INTERSECT"] = std::bind(cmdIntersect, _1, std::ref(dictionaries));
         // cmds["UNION"] = std::bind(cmdUnion, _1, std::ref(dictionaries));
         // cmds["DIFFERENCE"] = std::bind(cmdDifference, _1, std::ref(dictionaries));
         // cmds["COMPLEMENT"] = std::bind(cmdComplement, _1, std::ref(dictionaries));
+    }
+
+    std::map< std::string, std::function< void(std::istream&, std::ostream&) > > cmdsIO;
+    {
+        using namespace std::placeholders;
+        cmdsIO["LIST"];
+        cmdsIO["SAVE"];
+        cmdsIO["FREQ"];
+    }
+    std::map< std::string, std::function< void(std::istream&) > > cmdsI;
+    {
+        using namespace std::placeholders;
+        cmdsI["SCANTEXT"];
+        cmdsI["NEW"];
+        cmdsI["REMOVE"];
+        cmdsI["INTERSECT"];
+        cmdsI["UNION"];
+        cmdsI["DIFFERENCE"];
+        cmdsI["COMPLEMENT"];
     }
 
     std::string command;

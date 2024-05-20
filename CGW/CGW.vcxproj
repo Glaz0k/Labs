@@ -129,11 +129,18 @@
   <ItemGroup>
     <ClCompile Include="dictionaryCommands.cpp" />
     <ClCompile Include="dictionaryCommands.hpp" />
+    <ClCompile Include="dictionaryInteractions.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="validWord.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="dictionaryInteractions.hpp" />
     <ClInclude Include="validWord.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="test.txt" />
+    <Text Include="text2.txt" />
+    <Text Include="text1.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
