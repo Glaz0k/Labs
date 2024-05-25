@@ -138,6 +138,7 @@
     <ClInclude Include="validWord.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <Text Include="small.txt" />
     <Text Include="test.txt" />
     <Text Include="text2.txt" />
     <Text Include="text1.txt" />

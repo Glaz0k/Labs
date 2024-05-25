@@ -3,6 +3,18 @@
 #include <functional>
 #include "dictionaryCommands.hpp"
 
+std::ostream& operator<<(std::ostream& out, const std::pair< const std::string, size_t >& p)
+{
+    std::ostream::sentry sentry(out);
+    if (!sentry)
+    {
+        return out;
+    }
+    std::string t1 = p.first;
+    size_t t2 = p.second;
+    return out << t1 << " : " << t2;
+}
+
 int main(int argc, char* argv[])
 {
     using namespace kravchenko;
@@ -69,6 +81,12 @@ int main(int argc, char* argv[])
         std::cin.clear();
         std::cin.ignore(std::numeric_limits< std::streamsize >::max(), '\n');
     }
+
+    std::ofstream file("penis.txt");
+    using OutputItT = std::ostream_iterator< std::pair< const std::string, size_t > >;
+    const FrequencyDictionary& dict = dictionaries.at("penis");
+    std::copy(dict.cbegin(), dict.cend(), OutputItT{ file, "\n" });
+    file.close();
 
     return 0;
 }
