@@ -6,7 +6,7 @@
 
 namespace detail
 {
-    enum color_t
+    enum Color
     {
         BLACK,
         RED
@@ -19,22 +19,24 @@ namespace detail
         Node* parent;
         Node* left;
         Node* right;
-        color_t color;
+        Color color;
+
         template< class... Args >
-        Node(Node* parent_node, Node* left_node, Node* right_node, Args &&... args);
+        Node(Node* parent_node, Node* left_node, Node* right_node, Args&&... args);
         ~Node() = default;
+
         Node* next();
         Node* prev();
     };
 
     template< class Key, class T >
     template< class... Args >
-    Node< Key, T >::Node(Node* parent_node, Node* left_node, Node* right_node, Args &&... args) :
+    Node< Key, T >::Node(Node* parent_node, Node* left_node, Node* right_node, Args&&... args) :
         data(std::forward< Args... >(args...)),
         parent(parent_node),
         left(left_node),
         right(right_node),
-        color(color_t::RED)
+        color(Color::RED)
     {}
 
     template< class Key, class T >

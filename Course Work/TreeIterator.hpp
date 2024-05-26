@@ -5,27 +5,27 @@
 #include <iterator>
 #include "TreeNode.hpp"
 
-template < class Key, class T, class Compare >
-class RedBlackTree;
-
 template< class Key, class T >
 class TreeIterator : public std::iterator< std::bidirectional_iterator_tag, T >
 {
-    template < class T1, class T2, class T3 >
+    template < class Key, class T, class Compare >
     friend class RedBlackTree;
 public:
     TreeIterator();
     TreeIterator(const TreeIterator< Key, T >&) = default;
     ~TreeIterator() = default;
+
     TreeIterator< Key, T >& operator=(const TreeIterator< Key, T >&) = default;
     TreeIterator< Key, T >& operator++();
-    TreeIterator< Key, T > operator++(int);
     TreeIterator< Key, T >& operator--();
+    TreeIterator< Key, T > operator++(int);
     TreeIterator< Key, T > operator--(int);
+
     std::pair< Key, T >& operator*();
-    const std::pair< Key, T >& operator*() const;
     std::pair< Key, T >* operator->();
+    const std::pair< Key, T >& operator*() const;
     const std::pair< Key, T >* operator->() const;
+
     bool operator==(const TreeIterator< Key, T >& rhs) const;
     bool operator!=(const TreeIterator< Key, T >& rhs) const;
 private:
