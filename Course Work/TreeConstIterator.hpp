@@ -1,99 +1,123 @@
 #ifndef TREE_CONST_ITERATOR
 #define TREE_CONST_ITERATOR
 
-#include <utility>
 #include <iterator>
+#include <utility>
 #include "TreeNode.hpp"
-#include "TreeIterator.hpp"
 
-template< class Key, class T >
+template< class Key, class T, class Compare >
+class RedBlackTree;
+
+template< class Key, class T, class Compare = std::less< Key > >
 class TreeConstIterator : public std::iterator< std::bidirectional_iterator_tag, T >
 {
-    template < class Key, class T, class Compare >
-    friend class RedBlackTree;
+    friend class RedBlackTree< Key, T, Compare >;
 public:
     TreeConstIterator();
-    TreeConstIterator(const TreeConstIterator< Key, T >&) = default;
+    TreeConstIterator(const TreeConstIterator< Key, T, Compare >&) = default;
+    TreeConstIterator< Key, T, Compare >& operator=(const TreeConstIterator< Key, T, Compare >&) = default;
     ~TreeConstIterator() = default;
-
-    TreeConstIterator< Key, T >& operator=(const TreeConstIterator< Key, T >&) = default;
-    TreeConstIterator< Key, T >& operator++();
-    TreeConstIterator< Key, T >& operator--();
-    TreeConstIterator< Key, T > operator++(int);
-    TreeConstIterator< Key, T > operator--(int);
-
-    const std::pair< Key, T >& operator*() const;
+    TreeConstIterator< Key, T, Compare >& operator++();
+    TreeConstIterator< Key, T, Compare >& operator--();
+    TreeConstIterator< Key, T, Compare > operator++(int);
+    TreeConstIterator< Key, T, Compare > operator--(int);
+    bool operator==(const TreeConstIterator< Key, T, Compare >& rhs) const;
+    bool operator!=(const TreeConstIterator< Key, T, Compare >& rhs) const;
     const std::pair< Key, T >* operator->() const;
-
-    bool operator==(const TreeConstIterator< Key, T >& rhs) const;
-    bool operator!=(const TreeConstIterator< Key, T >& rhs) const;
+    const std::pair< Key, T >& operator*() const;
 private:
-    const detail::Node< Key, T >* node_;
-    explicit TreeConstIterator(const detail::Node< Key, T >* node_ptr);
+    detail::Node< Key, T >* node_;
+    explicit TreeConstIterator(const detail::Node< Key, T >* node);
 };
 
-template< class Key, class T >
-TreeConstIterator< Key, T >::TreeConstIterator() :
+template<class Key, class T, class Compare>
+TreeConstIterator<Key, T, Compare>::TreeConstIterator() :
     node_(nullptr)
 {}
 
-template< class Key, class T >
-TreeConstIterator< Key, T >::TreeConstIterator(const detail::Node< Key, T >* node_ptr) :
-    node_(node_ptr)
-{}
-
-template< class Key, class T >
-TreeConstIterator< Key, T >& TreeConstIterator< Key, T >::operator++()
+template<class Key, class T, class Compare>
+TreeConstIterator<Key, T, Compare>& TreeConstIterator<Key, T, Compare>::operator++()
 {
-    node_ = const_cast<detail::Node< Key, T >*>(node_)->next();
+    if (node_->right)
+    {
+        node_ = node_->right;
+        while (node_->left)
+        {
+            node_ = node_->left;
+        }
+        return *this;
+    }
+    while (node_->parent && node_->parent->right == node_)
+    {
+        node_ = node_->parent;
+    }
+    node_ = node_->parent;
     return *this;
 }
 
-template< class Key, class T >
-TreeConstIterator< Key, T > TreeConstIterator< Key, T >::operator++(int)
+template<class Key, class T, class Compare>
+TreeConstIterator<Key, T, Compare>& TreeConstIterator<Key, T, Compare>::operator--()
 {
-    TreeConstIterator< Key, T > temp = *this;
-    operator++();
-    return temp;
-}
-
-template< class Key, class T >
-TreeConstIterator< Key, T >& TreeConstIterator< Key, T >::operator--()
-{
-    node_ = const_cast<detail::Node< Key, T >*>(node_)->prev();
+    if (node_->left)
+    {
+        node_ = node_->left;
+        while (node_->right)
+        {
+            node_ = node_->right;
+        }
+        return *this;
+    }
+    while (node_->parent && node_->parent->left == node_)
+    {
+        node_ = node_->parent;
+    }
+    node_ = node_->parent;
     return *this;
 }
 
-template< class Key, class T >
-TreeConstIterator< Key, T > TreeConstIterator< Key, T >::operator--(int)
+template<class Key, class T, class Compare>
+TreeConstIterator<Key, T, Compare> TreeConstIterator<Key, T, Compare>::operator++(int)
 {
-    TreeConstIterator< Key, T > temp = *this;
-    operator--();
-    return temp;
+    TreeConstIterator< Key, T, Compare > result(*this);
+    ++(*this);
+    return result;
 }
 
-template< class Key, class T >
-const std::pair< Key, T >& TreeConstIterator< Key, T>::operator*() const
+template<class Key, class T, class Compare>
+TreeConstIterator<Key, T, Compare> TreeConstIterator<Key, T, Compare>::operator--(int)
 {
-    return node_->data;
+    TreeConstIterator< Key, T, Compare > result(*this);
+    --(*this);
+    return result;
 }
 
-template< class Key, class T >
-const std::pair< Key, T >* TreeConstIterator< Key, T >::operator->() const
+template<class Key, class T, class Compare>
+bool TreeConstIterator<Key, T, Compare>::operator==(const TreeConstIterator<Key, T, Compare>& rhs) const
+{
+    return node_ == rhs.node_;
+}
+
+template<class Key, class T, class Compare>
+bool TreeConstIterator<Key, T, Compare>::operator!=(const TreeConstIterator<Key, T, Compare>& rhs) const
+{
+    return !(node_ == rhs.node_);
+}
+
+template<class Key, class T, class Compare>
+const std::pair<Key, T>* TreeConstIterator<Key, T, Compare>::operator->() const
 {
     return std::addressof(node_->data);
 }
 
-template< class Key, class T >
-bool TreeConstIterator< Key, T >::operator==(const TreeConstIterator< Key, T >& rhs) const
+template<class Key, class T, class Compare>
+const std::pair<Key, T>& TreeConstIterator<Key, T, Compare>::operator*() const
 {
-    return (node_ == rhs.node_);
+    return node_->data;
 }
 
-template< class Key, class T >
-bool TreeConstIterator< Key, T >::operator!=(const TreeConstIterator< Key, T >& rhs) const
-{
-    return !(*this == rhs);
-}
+template<class Key, class T, class Compare>
+TreeConstIterator<Key, T, Compare>::TreeConstIterator(const detail::Node< Key, T >* node) :
+    node_(const_cast<detail::Node< Key, T >*>(node))
+{}
 
 #endif
