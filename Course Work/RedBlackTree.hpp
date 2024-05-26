@@ -23,6 +23,9 @@ public:
     RedBlackTree< Key, T, Compare >& operator=(RedBlackTree< Key, T, Compare >&& rhs) noexcept;
     ~RedBlackTree();
 
+    template< class InputIt >
+    RedBlackTree(InputIt first, InputIt last);
+
     Iterator begin();
     Iterator end();
     ConstIterator cbegin() const;
@@ -33,20 +36,17 @@ public:
 
     std::pair< Iterator, bool > insert(const ValueType& value);
     std::pair< Iterator, bool > insert(ValueType&& value);
-    Iterator insert(Iterator pos, const ValueType& value);
-    Iterator insert(Iterator pos, ValueType&& value);
-    template< class InputIt>
+    template< class InputIt >
     void insert(InputIt first, InputIt last);
 
     Iterator erase(const Key& key);
     Iterator erase(Iterator pos);
-    Iterator erase(ConstIterator pos);
     Iterator erase(Iterator first, Iterator last);
+    Iterator erase(ConstIterator pos);
     Iterator erase(ConstIterator first, ConstIterator last);
 
     void swap(RedBlackTree& rhs) noexcept;
     size_t size() const noexcept;
-    size_t count(const Key& key) const;
 
     Iterator find(const Key& key);
     ConstIterator find(const Key& key) const;
@@ -58,29 +58,34 @@ private:
     Compare cmp_;
     size_t size_;
 
-    void clear_subtree(detail::Node< Key, T >* subtree);
-    detail::Node< Key, T >* find_to_change_erased(detail::Node< Key, T >* subtree);
-    detail::Node< Key, T >* find_grandparent(detail::Node< Key, T >* subtree);
-    detail::Node< Key, T >* find_uncle(detail::Node< Key, T >* subtree);
-    detail::Node< Key, T >* find_brother(detail::Node< Key, T >* subtree);
+    void clearSubtree(detail::Node< Key, T >* subtree);
+    detail::Node< Key, T >* findToChangeErased(detail::Node< Key, T >* subtree);
+    detail::Node< Key, T >* findGrandparent(detail::Node< Key, T >* subtree);
+    detail::Node< Key, T >* findUncle(detail::Node< Key, T >* subtree);
+    detail::Node< Key, T >* findBrother(detail::Node< Key, T >* subtree);
+
     template< detail::color_t C >
-    bool is_color(detail::Node< Key, T >* node);
+    bool isColored(detail::Node< Key, T >* node);
     template< detail::color_t C >
     void colorize(detail::Node< Key, T >* node);
-    bool is_leaf(detail::Node< Key, T >* node);
-    void rotate_left(detail::Node< Key, T >* subtree);
-    void rotate_right(detail::Node< Key, T >* subtree);
-    void insert_balance_case1(detail::Node< Key, T >* subtree);
-    void insert_balance_case2(detail::Node< Key, T >* subtree);
-    void insert_balance_case3(detail::Node< Key, T >* subtree);
-    void insert_balance_case4(detail::Node< Key, T >* subtree);
-    void insert_balance_case5(detail::Node< Key, T >* subtree);
-    void erase_balance_case1(detail::Node< Key, T >* subtree);
-    void erase_balance_case2(detail::Node< Key, T >* subtree);
-    void erase_balance_case3(detail::Node< Key, T >* subtree);
-    void erase_balance_case4(detail::Node< Key, T >* subtree);
-    void erase_balance_case5(detail::Node< Key, T >* subtree);
-    void erase_balance_case6(detail::Node< Key, T >* subtree);
+
+    bool isLeaf(detail::Node< Key, T >* node);
+
+    void rotateLeft(detail::Node< Key, T >* subtree);
+    void rotateRight(detail::Node< Key, T >* subtree);
+
+    void insertBalance1(detail::Node< Key, T >* subtree);
+    void insertBalance2(detail::Node< Key, T >* subtree);
+    void insertBalance3(detail::Node< Key, T >* subtree);
+    void insertBalance4(detail::Node< Key, T >* subtree);
+    void insertBalance5(detail::Node< Key, T >* subtree);
+
+    void eraseBalance1(detail::Node< Key, T >* subtree);
+    void eraseBalance2(detail::Node< Key, T >* subtree);
+    void eraseBalance3(detail::Node< Key, T >* subtree);
+    void eraseBalance4(detail::Node< Key, T >* subtree);
+    void eraseBalance5(detail::Node< Key, T >* subtree);
+    void eraseBalance6(detail::Node< Key, T >* subtree);
 };
 
 template< class Key, class T, class Compare >
@@ -107,6 +112,24 @@ template< class Key, class T, class Compare >
 RedBlackTree< Key, T, Compare >::~RedBlackTree()
 {
     clear();
+}
+
+template< class Key, class T, class Compare >
+template< class InputIt >
+RedBlackTree< Key, T, Compare >::RedBlackTree(InputIt first, InputIt last) :
+    root_(nullptr)
+{
+    while (first != last)
+    {
+        try
+        {
+            insert(*(first++));
+        }
+        catch (...)
+        {
+            clear();
+        }
+    }
 }
 
 template< class Key, class T, class Compare >
@@ -163,12 +186,22 @@ TreeConstIterator< Key, T > RedBlackTree< Key, T, Compare >::cend() const
 template< class Key, class T, class Compare >
 void RedBlackTree< Key, T, Compare >::clear()
 {
-    clear_subtree(root_);
+    clearSubtree(root_);
     root_ = nullptr;
     size_ = 0;
 }
 
-
+template< class Key, class T, class Compare >
+void RedBlackTree< Key, T, Compare >::clearSubtree(detail::Node< Key, T >* subtree)
+{
+    if (!subtree)
+    {
+        return;
+    }
+    clearSubtree(subtree->left);
+    clearSubtree(subtree->right);
+    delete subtree;
+}
 
 template< class Key, class T, class Compare >
 std::pair< TreeIterator< Key, T >, bool > RedBlackTree< Key, T, Compare >::insert(const ValueType& value)
@@ -180,6 +213,7 @@ template< class Key, class T, class Compare >
 std::pair< TreeIterator< Key, T >, bool > RedBlackTree< Key, T, Compare >::insert(ValueType&& value)
 {
     detail::Node< Key, T >* node = root_;
+    // Empty tree case
     if (empty())
     {
         root_ = new detail::Node< Key, T >(nullptr, nullptr, nullptr, std::move(value));
@@ -188,14 +222,17 @@ std::pair< TreeIterator< Key, T >, bool > RedBlackTree< Key, T, Compare >::inser
     else
     {
         detail::Node< Key, T >* prev = node;
+        // Find position to insert
         while (node)
         {
             prev = node;
-            if (!cmp_(value.first, node->data.first) && !cmp_(node->data.first, value.first))
+            bool left = cmp_(value.first, node->data.first);
+            // Existed element
+            if (!left && !cmp_(node->data.first, value.first))
             {
                 return std::make_pair(Iterator(node), false);
             }
-            else if (cmp_(value.first, node->data.first))
+            else if (left)
             {
                 node = node->left;
             }
@@ -204,7 +241,9 @@ std::pair< TreeIterator< Key, T >, bool > RedBlackTree< Key, T, Compare >::inser
                 node = node->right;
             }
         }
+        // Create node with value
         node = new detail::Node< Key, T >(prev, nullptr, nullptr, std::move(value));
+        // Connect with parent
         try
         {
             if (cmp_(node->data.first, prev->data.first))
@@ -222,54 +261,10 @@ std::pair< TreeIterator< Key, T >, bool > RedBlackTree< Key, T, Compare >::inser
             throw;
         }
     }
-    insert_balance_case1(node);
+    // Check balance
+    insertBalance1(node);
     ++size_;
     return std::make_pair(Iterator(node), true);
-}
-
-template< class Key, class T, class Compare >
-TreeIterator< Key, T > RedBlackTree< Key, T, Compare >::insert(Iterator pos, const ValueType& value)
-{
-    return insert(pos, ValueType(value));
-}
-
-template< class Key, class T, class Compare >
-TreeIterator< Key, T > RedBlackTree< Key, T, Compare >::insert(Iterator pos, ValueType&& value)
-{
-    detail::Node< Key, T >* node = pos.node_;
-    detail::Node< Key, T >* prev = node;
-    while (node)
-    {
-        prev = node;
-        if (cmp_(value.first, node->data.first))
-        {
-            node = node->left;
-        }
-        else
-        {
-            node = node->right;
-        }
-    }
-    node = new detail::Node< Key, T >(prev, nullptr, nullptr, std::move(value));
-    try
-    {
-        if (cmp_(node->data.first, prev->data.first))
-        {
-            prev->left = node;
-        }
-        else
-        {
-            prev->right = node;
-        }
-    }
-    catch (...)
-    {
-        delete node;
-        throw;
-    }
-    insert_balance_case1(node);
-    ++size_;
-    return Iterator(node);
 }
 
 template< class Key, class T, class Compare >
@@ -313,7 +308,7 @@ template< class Key, class T, class Compare >
 TreeIterator< Key, T > RedBlackTree< Key, T, Compare >::erase(Iterator pos)
 {
     detail::Node< Key, T >* to_delete = pos.node_;
-    detail::Node< Key, T >* found = find_to_change_erased(to_delete);
+    detail::Node< Key, T >* found = findToChangeErased(to_delete);
     if (to_delete == root_ && !found)
     {
         clear();
@@ -335,7 +330,7 @@ TreeIterator< Key, T > RedBlackTree< Key, T, Compare >::erase(Iterator pos)
     {
         std::swap(found->data, to_delete->data);
     }
-    erase_balance_case1(found);
+    eraseBalance1(found);
     auto iter = ++pos;
     delete found;
     --size_;
@@ -381,21 +376,6 @@ template< class Key, class T, class Compare >
 size_t RedBlackTree< Key, T, Compare >::size() const noexcept
 {
     return size_;
-}
-
-template< class Key, class T, class Compare >
-size_t RedBlackTree< Key, T, Compare >::count(const Key& key) const
-{
-    auto citer = cbegin();
-    size_t size = 0;
-    while (citer != cend())
-    {
-        if (!cmp_(key, citer->first) && !cmp_(citer->first, key))
-        {
-            ++size;
-        }
-    }
-    return size;
 }
 
 template< class Key, class T, class Compare >
@@ -448,7 +428,7 @@ T& RedBlackTree< Key, T, Compare >::at(const Key& key)
     TreeIterator< Key, T > iter = find(key);
     if (iter == end())
     {
-        throw std::out_of_range("Out of range in element access");
+        throw std::out_of_range("Invalid element access");
     }
     return iter->second;
 }
@@ -459,25 +439,13 @@ const T& RedBlackTree< Key, T, Compare >::at(const Key& key) const
     TreeConstIterator< Key, T > iter = find(key);
     if (iter == cend())
     {
-        throw std::out_of_range("Out of range in element access");
+        throw std::out_of_range("Invalid element access");
     }
     return iter->second;
 }
 
 template< class Key, class T, class Compare >
-void RedBlackTree< Key, T, Compare >::clear_subtree(detail::Node< Key, T >* subtree)
-{
-    if (!subtree)
-    {
-        return;
-    }
-    clear_subtree(subtree->left);
-    clear_subtree(subtree->right);
-    delete subtree;
-}
-
-template< class Key, class T, class Compare >
-detail::Node< Key, T >* RedBlackTree< Key, T, Compare >::find_to_change_erased(detail::Node< Key, T >* subtree)
+detail::Node< Key, T >* RedBlackTree< Key, T, Compare >::findToChangeErased(detail::Node< Key, T >* subtree)
 {
     if (subtree->left)
     {
@@ -505,7 +473,7 @@ detail::Node< Key, T >* RedBlackTree< Key, T, Compare >::find_to_change_erased(d
 
 template< class Key, class T, class Compare >
 template< detail::color_t C >
-bool RedBlackTree< Key, T, Compare >::is_color(detail::Node< Key, T >* node)
+bool RedBlackTree< Key, T, Compare >::isColored(detail::Node< Key, T >* node)
 {
     return (node->color == C);
 }
@@ -518,13 +486,13 @@ void RedBlackTree< Key, T, Compare >::colorize(detail::Node< Key, T >* node)
 }
 
 template< class Key, class T, class Compare >
-bool RedBlackTree< Key, T, Compare >::is_leaf(detail::Node< Key, T >* node)
+bool RedBlackTree< Key, T, Compare >::isLeaf(detail::Node< Key, T >* node)
 {
     return !(node->left && node->right);
 }
 
 template< class Key, class T, class Compare >
-detail::Node< Key, T >* RedBlackTree< Key, T, Compare >::find_grandparent(detail::Node< Key, T >* subtree)
+detail::Node< Key, T >* RedBlackTree< Key, T, Compare >::findGrandparent(detail::Node< Key, T >* subtree)
 {
     if (subtree && subtree->parent)
     {
@@ -537,9 +505,9 @@ detail::Node< Key, T >* RedBlackTree< Key, T, Compare >::find_grandparent(detail
 }
 
 template< class Key, class T, class Compare >
-detail::Node< Key, T >* RedBlackTree< Key, T, Compare >::find_uncle(detail::Node< Key, T >* subtree)
+detail::Node< Key, T >* RedBlackTree< Key, T, Compare >::findUncle(detail::Node< Key, T >* subtree)
 {
-    detail::Node< Key, T >* node = find_grandparent(subtree);
+    detail::Node< Key, T >* node = findGrandparent(subtree);
     if (!node)
     {
         return nullptr;
@@ -555,7 +523,7 @@ detail::Node< Key, T >* RedBlackTree< Key, T, Compare >::find_uncle(detail::Node
 }
 
 template< class Key, class T, class Compare >
-detail::Node< Key, T >* RedBlackTree< Key, T, Compare >::find_brother(detail::Node< Key, T >* subtree)
+detail::Node< Key, T >* RedBlackTree< Key, T, Compare >::findBrother(detail::Node< Key, T >* subtree)
 {
     if (subtree == subtree->parent->left)
     {
@@ -568,7 +536,7 @@ detail::Node< Key, T >* RedBlackTree< Key, T, Compare >::find_brother(detail::No
 }
 
 template< class Key, class T, class Compare >
-void RedBlackTree< Key, T, Compare >::rotate_left(detail::Node< Key, T >* subtree)
+void RedBlackTree< Key, T, Compare >::rotateLeft(detail::Node< Key, T >* subtree)
 {
     detail::Node< Key, T >* node = subtree->right;
     node->parent = subtree->parent;
@@ -597,7 +565,7 @@ void RedBlackTree< Key, T, Compare >::rotate_left(detail::Node< Key, T >* subtre
 }
 
 template< class Key, class T, class Compare >
-void RedBlackTree< Key, T, Compare >::rotate_right(detail::Node< Key, T >* subtree)
+void RedBlackTree< Key, T, Compare >::rotateRight(detail::Node< Key, T >* subtree)
 {
     detail::Node< Key, T >* node = subtree->left;
     node->parent = subtree->parent;
@@ -626,7 +594,7 @@ void RedBlackTree< Key, T, Compare >::rotate_right(detail::Node< Key, T >* subtr
 }
 
 template< class Key, class T, class Compare >
-void RedBlackTree< Key, T, Compare >::insert_balance_case1(detail::Node< Key, T >* subtree)
+void RedBlackTree< Key, T, Compare >::insertBalance1(detail::Node< Key, T >* subtree)
 {
     using namespace detail;
     if (!subtree->parent)
@@ -635,186 +603,186 @@ void RedBlackTree< Key, T, Compare >::insert_balance_case1(detail::Node< Key, T 
     }
     else
     {
-        insert_balance_case2(subtree);
+        insertBalance2(subtree);
     }
 }
 
 template< class Key, class T, class Compare >
-void RedBlackTree< Key, T, Compare >::insert_balance_case2(detail::Node< Key, T >* subtree)
+void RedBlackTree< Key, T, Compare >::insertBalance2(detail::Node< Key, T >* subtree)
 {
     using namespace detail;
-    if (is_color< RED >(subtree->parent))
+    if (isColored< RED >(subtree->parent))
     {
-        insert_balance_case3(subtree);
+        insertBalance3(subtree);
     }
 }
 
 template< class Key, class T, class Compare >
-void RedBlackTree< Key, T, Compare >::insert_balance_case3(detail::Node< Key, T >* subtree)
+void RedBlackTree< Key, T, Compare >::insertBalance3(detail::Node< Key, T >* subtree)
 {
     using namespace detail;
-    Node< Key, T >* uncle = find_uncle(subtree);
-    if (uncle && is_color< RED >(uncle))
+    Node< Key, T >* uncle = findUncle(subtree);
+    if (uncle && isColored< RED >(uncle))
     {
         colorize< BLACK >(subtree->parent);
         colorize< BLACK >(uncle);
-        Node< Key, T >* grand = find_grandparent(subtree);
+        Node< Key, T >* grand = findGrandparent(subtree);
         colorize< RED >(grand);
-        insert_balance_case1(grand);
+        insertBalance1(grand);
     }
     else
     {
-        insert_balance_case4(subtree);
+        insertBalance4(subtree);
     }
 }
 
 template< class Key, class T, class Compare >
-void RedBlackTree< Key, T, Compare >::insert_balance_case4(detail::Node< Key, T >* subtree)
+void RedBlackTree< Key, T, Compare >::insertBalance4(detail::Node< Key, T >* subtree)
 {
     using namespace detail;
-    Node< Key, T >* grand = find_grandparent(subtree);
+    Node< Key, T >* grand = findGrandparent(subtree);
     if (subtree == subtree->parent->right && subtree->parent == grand->left)
     {
-        rotate_left(subtree->parent);
+        rotateLeft(subtree->parent);
         subtree = subtree->left;
     }
     else if (subtree == subtree->parent->left && subtree->parent == grand->right)
     {
-        rotate_right(subtree->parent);
+        rotateRight(subtree->parent);
         subtree = subtree->right;
     }
-    insert_balance_case5(subtree);
+    insertBalance5(subtree);
 }
 
 template< class Key, class T, class Compare >
-void RedBlackTree< Key, T, Compare >::insert_balance_case5(detail::Node< Key, T >* subtree)
+void RedBlackTree< Key, T, Compare >::insertBalance5(detail::Node< Key, T >* subtree)
 {
     using namespace detail;
-    Node< Key, T >* grand = find_grandparent(subtree);
+    Node< Key, T >* grand = findGrandparent(subtree);
     colorize< BLACK >(subtree->parent);
     colorize< RED >(grand);
     if (subtree == subtree->parent->left && subtree->parent == grand->left)
     {
-        rotate_right(grand);
+        rotateRight(grand);
     }
     else
     {
-        rotate_left(grand);
+        rotateLeft(grand);
     }
 }
 
 template< class Key, class T, class Compare >
-void RedBlackTree< Key, T, Compare >::erase_balance_case1(detail::Node< Key, T >* subtree)
+void RedBlackTree< Key, T, Compare >::eraseBalance1(detail::Node< Key, T >* subtree)
 {
     using namespace detail;
-    if (is_color< BLACK >(subtree) && !is_leaf(subtree))
+    if (isColored< BLACK >(subtree) && !isLeaf(subtree))
     {
         Node< Key, T >* child = (subtree->right) ? subtree->left : subtree->right;
-        if (is_color< RED >(child))
+        if (isColored< RED >(child))
         {
             colorize< BLACK >(child);
         }
         else if (subtree->parent)
         {
-            erase_balance_case2(child);
+            eraseBalance2(child);
         }
     }
 }
 
 template< class Key, class T, class Compare >
-void RedBlackTree< Key, T, Compare >::erase_balance_case2(detail::Node< Key, T >* subtree)
+void RedBlackTree< Key, T, Compare >::eraseBalance2(detail::Node< Key, T >* subtree)
 {
     using namespace detail;
-    Node< Key, T >* brother = find_brother(subtree);
-    if (is_color< RED >(brother))
+    Node< Key, T >* brother = findBrother(subtree);
+    if (isColored< RED >(brother))
     {
         colorize< RED >(subtree->parent);
         colorize< BLACK >(brother);
         if (subtree == subtree->parent->left)
         {
-            rotate_left(subtree->parent);
+            rotateLeft(subtree->parent);
         }
         else
         {
-            rotate_right(subtree->parent);
+            rotateRight(subtree->parent);
         }
     }
-    erase_balance_case3(subtree);
+    eraseBalance3(subtree);
 }
 
 template< class Key, class T, class Compare >
-void RedBlackTree< Key, T, Compare >::erase_balance_case3(detail::Node< Key, T >* subtree)
+void RedBlackTree< Key, T, Compare >::eraseBalance3(detail::Node< Key, T >* subtree)
 {
     using namespace detail;
-    Node< Key, T >* brother = find_brother(subtree);
-    bool is_any_child_black = is_color< BLACK >(brother->left) && is_color< BLACK >(brother->right);
-    if (is_color< BLACK >(subtree->parent) && is_color< BLACK >(brother) && is_any_child_black)
+    Node< Key, T >* brother = findBrother(subtree);
+    bool is_any_child_black = isColored< BLACK >(brother->left) && isColored< BLACK >(brother->right);
+    if (isColored< BLACK >(subtree->parent) && isColored< BLACK >(brother) && is_any_child_black)
     {
         colorize< RED >(brother);
-        erase_balance_case1(subtree->parent);
+        eraseBalance1(subtree->parent);
     }
     else
     {
-        erase_balance_case4(subtree);
+        eraseBalance4(subtree);
     }
 }
 
 template< class Key, class T, class Compare >
-void RedBlackTree< Key, T, Compare >::erase_balance_case4(detail::Node< Key, T >* subtree)
+void RedBlackTree< Key, T, Compare >::eraseBalance4(detail::Node< Key, T >* subtree)
 {
     using namespace detail;
-    Node< Key, T >* brother = find_brother(subtree);
-    bool is_any_child_black = is_color< BLACK >(brother->left) && is_color< BLACK >(brother->right);
-    if (is_color< RED >(subtree->parent) && is_color< BLACK >(brother) && is_any_child_black)
+    Node< Key, T >* brother = findBrother(subtree);
+    bool is_any_child_black = isColored< BLACK >(brother->left) && isColored< BLACK >(brother->right);
+    if (isColored< RED >(subtree->parent) && isColored< BLACK >(brother) && is_any_child_black)
     {
         colorize< RED >(brother);
         colorize< BLACK >(subtree->parent);
     }
     else
     {
-        erase_balance_case5(subtree);
+        eraseBalance5(subtree);
     }
 }
 
 template< class Key, class T, class Compare >
-void RedBlackTree< Key, T, Compare >::erase_balance_case5(detail::Node< Key, T >* subtree)
+void RedBlackTree< Key, T, Compare >::eraseBalance5(detail::Node< Key, T >* subtree)
 {
     using namespace detail;
-    Node< Key, T >* brother = find_brother(subtree);
-    if (is_color< BLACK >(brother))
+    Node< Key, T >* brother = findBrother(subtree);
+    if (isColored< BLACK >(brother))
     {
-        if (subtree == subtree->parent->left && is_color< BLACK >(brother->right) && is_color< RED >(brother->left))
+        if (subtree == subtree->parent->left && isColored< BLACK >(brother->right) && isColored< RED >(brother->left))
         {
             colorize< RED >(brother);
             colorize< BLACK >(brother->left);
-            rotate_right(brother);
+            rotateRight(brother);
         }
-        else if (subtree == subtree->parent->right && is_color< RED >(brother->right) && is_color< BLACK >(brother->left))
+        else if (subtree == subtree->parent->right && isColored< RED >(brother->right) && isColored< BLACK >(brother->left))
         {
             colorize< RED >(brother);
             colorize< BLACK >(brother->right);
-            rotate_left(brother);
+            rotateLeft(brother);
         }
     }
-    erase_balance_case6(subtree);
+    eraseBalance6(subtree);
 }
 
 template< class Key, class T, class Compare >
-void RedBlackTree< Key, T, Compare >::erase_balance_case6(detail::Node< Key, T >* subtree)
+void RedBlackTree< Key, T, Compare >::eraseBalance6(detail::Node< Key, T >* subtree)
 {
     using namespace detail;
-    Node< Key, T >* brother = find_brother(subtree);
+    Node< Key, T >* brother = findBrother(subtree);
     brother->color = subtree->parent->color;
     colorize< BLACK >(subtree->parent);
     if (subtree == subtree->parent->left)
     {
         colorize< BLACK >(brother->right);
-        rotate_left(subtree->parent);
+        rotateLeft(subtree->parent);
     }
     else
     {
         colorize< BLACK >(brother->left);
-        rotate_right(subtree->parent);
+        rotateRight(subtree->parent);
     }
 }
 
