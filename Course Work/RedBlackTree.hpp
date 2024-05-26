@@ -1,12 +1,10 @@
 #ifndef RED_BLACK_TREE_HPP
 #define RED_BLACK_TREE_HPP
 
-#include <functional>
+#include <stdexcept>
 #include "TreeNode.hpp"
 #include "TreeConstIterator.hpp"
 #include "TreeIterator.hpp"
-
-#include <iostream>
 
 template< class Key, class T, class Compare = std::less< Key > >
 class RedBlackTree
@@ -648,8 +646,8 @@ size_t RedBlackTree< Key, T, Compare >::size() const noexcept
     return size_;
 }
 
-template<class Key, class T, class Compare>
-inline detail::Node<Key, T>* RedBlackTree<Key, T, Compare>::findKey(const Key& key) const
+template< class Key, class T, class Compare >
+detail::Node<Key, T>* RedBlackTree< Key, T, Compare >::findKey(const Key& key) const
 {
     detail::Node< Key, T >* node = root_; 
     while (node) 
@@ -763,25 +761,25 @@ detail::Node< Key, T >* RedBlackTree< Key, T, Compare >::findGrand(detail::Node<
 template< class Key, class T, class Compare >
 detail::Node< Key, T >* RedBlackTree< Key, T, Compare >::findUncle(detail::Node< Key, T >* subtree)
 {
-    detail::Node< Key, T >* node = findGrand(subtree);
-    if (!node)
+    detail::Node< Key, T >* grand = findGrand(subtree);
+    if (!grand)
     {
         return nullptr;
     }
-    if (node->parent == node->left)
+    if (grand->parent == grand->left)
     {
-        return node->right;
+        return grand->right;
     }
     else
     {
-        return node->left;
+        return grand->left;
     }
 }
 
 template< class Key, class T, class Compare >
 detail::Node< Key, T >* RedBlackTree< Key, T, Compare >::findBrother(detail::Node< Key, T >* subtree)
 {
-    if (subtree == subtree->parent->left)
+    if (isLeftChild(subtree))
     {
         return subtree->parent->right;
     }

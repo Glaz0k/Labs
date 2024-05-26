@@ -1,5 +1,6 @@
 #include "RedBlackTree.hpp"
 #include <string>
+#include <iostream>
 
 int main()
 {
