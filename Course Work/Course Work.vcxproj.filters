@@ -49,5 +49,20 @@
     <Text Include="1984.txt">
       <Filter>Resource Files</Filter>
     </Text>
+    <Text Include="war-and-peace.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+    <Text Include="crime-and-punishment.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+    <Text Include="my-soviet-passport.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+    <Text Include="evgeny-onegin.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+    <Text Include="smells-like-teen-spirit.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
   </ItemGroup>
 </Project>

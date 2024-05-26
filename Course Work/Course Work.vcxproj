@@ -141,6 +141,11 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="1984.txt" />
+    <Text Include="crime-and-punishment.txt" />
+    <Text Include="evgeny-onegin.txt" />
+    <Text Include="my-soviet-passport.txt" />
+    <Text Include="smells-like-teen-spirit.txt" />
+    <Text Include="war-and-peace.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
