@@ -1,6 +1,7 @@
 #include <fstream>
 #include <functional>
 #include <iostream>
+#include <cstring>
 #include <string>
 #include "Commands.hpp"
 #include "RedBlackTree.hpp"
@@ -21,10 +22,10 @@ int main(int argc, char* argv[])
         cmds["CLEAR"] = std::bind(cmdClear, _1, _2, std::ref(dict));
     }
 
-    if (argc == 2 && std::string(argv[1]) == "--test")
+    if (argc == 2 && std::strcmp(argv[1], "--test") == 0)
     {
         testTree(std::cout);
-        // testDictionary(std::cout, cmds);
+        testDictionary(std::cout, cmds);
         return 0;
     }
 

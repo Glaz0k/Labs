@@ -80,7 +80,7 @@ private:
     void insertBalanceStep2(detail::Node< Key, T >* subtree);
     void insertBalanceStep3(detail::Node< Key, T >* subtree);
     void insertBalanceStep4(detail::Node< Key, T >* subtree);
-    void insertBalance5(detail::Node< Key, T >* subtree);
+    void insertBalanceStep5(detail::Node< Key, T >* subtree);
 
     void eraseBalance1(detail::Node< Key, T >* subtree);
     void eraseBalance2(detail::Node< Key, T >* subtree);
@@ -208,7 +208,7 @@ template< class Key, class T, class Compare >
 std::pair< TreeIterator< Key, T >, bool > RedBlackTree< Key, T, Compare >::insert(ValueType&& value)
 {
     detail::Node< Key, T >* node = root_;
-    if (empty())
+    if (!node)
     {
         root_ = new detail::Node< Key, T >(nullptr, nullptr, nullptr, std::move(value));
         node = root_;
@@ -300,7 +300,11 @@ void RedBlackTree< Key, T, Compare >::insertBalanceStep3(detail::Node< Key, T >*
 {
     using namespace detail;
     Node< Key, T >* uncle = getUncle(subtree);
-    if (uncle && hasColor< RED >(uncle))
+    if (!uncle)
+    {
+        insertBalanceStep4(subtree);
+    }
+    else if (hasColor< RED >(uncle))
     {
         recolor< BLACK >(subtree->parent);
         recolor< BLACK >(uncle);
@@ -310,74 +314,77 @@ void RedBlackTree< Key, T, Compare >::insertBalanceStep3(detail::Node< Key, T >*
     }
     else
     {
-        insertBalanceStep4(subtree);
+        insertBalanceStep5(subtree);
     }
+}
+
+// no uncle
+template< class Key, class T, class Compare >
+void RedBlackTree<Key, T, Compare>::insertBalanceStep4(detail::Node< Key, T >* subtree)
+{
+    if (isRightChild(subtree->parent))
+    {
+        if (isLeftChild(subtree))
+        {
+            turnRight(subtree->parent);
+        }
+        else
+        {
+            subtree = subtree->parent;
+        }
+        turnLeft(subtree->parent);
+        recolor < detail::RED >(subtree->left);
+    }
+    else
+    {
+        if (isRightChild(subtree))
+        {
+            turnLeft(subtree->parent);
+        }
+        else
+        {
+            subtree = subtree->parent;
+        }
+        turnRight(subtree->parent);
+        recolor < detail::RED >(subtree->right);
+    }
+    recolor < detail::BLACK >(subtree);
 }
 
 // 2nd case
 template< class Key, class T, class Compare >
-void RedBlackTree< Key, T, Compare >::insertBalanceStep4(detail::Node< Key, T >* subtree)
+void RedBlackTree< Key, T, Compare >::insertBalanceStep5(detail::Node< Key, T >* subtree)
 {
     using namespace detail;
-    Node< Key, T >* grand = getGrand(subtree);
-    if (isRightChild(subtree) && subtree->parent == grand->left)
+    Node< Key, T >* uncle = getUncle(subtree);
+    if (isRightChild(uncle))
     {
-        turnLeft(subtree->parent);
-        subtree = subtree->left;
-    }
-    else if (isLeftChild(subtree) && subtree->parent == grand->right)
-    {
-        turnRight(subtree->parent);
-        subtree = subtree->right;
-    }
-    insertBalance5(subtree);
-}
-
-// Recolor and check which main turn must be performed
-template< class Key, class T, class Compare >
-void RedBlackTree< Key, T, Compare >::insertBalance5(detail::Node< Key, T >* subtree)
-{
-    using namespace detail;
-    Node< Key, T >* grand = getGrand(subtree);
-    recolor< BLACK >(subtree->parent);
-    recolor< RED >(grand);
-    if (isLeftChild(subtree) && subtree->parent == grand->left)
-    {
-        turnRight(grand);
-    }
-    else
-    {
-        turnLeft(grand);
-    }
-}
-
-template< class Key, class T, class Compare >
-void RedBlackTree< Key, T, Compare >::turnLeft(detail::Node< Key, T >* subtree)
-{
-    detail::Node< Key, T >* node = subtree->right;
-    node->parent = subtree->parent;
-    if (!node->parent)
-    {
-        root_ = node;
-    }
-    if (subtree->parent)
-    {
-        if (isLeftChild(subtree))
+        if (isRightChild(subtree))
         {
-            subtree->parent->left = node;
+            turnLeft(subtree->parent);
         }
         else
         {
-            subtree->parent->right = node;
+            subtree = subtree->parent;
         }
+        turnRight(subtree->parent);
+        recolor< BLACK >(subtree);
+        recolor< RED >(subtree->right);
     }
-    subtree->right = node->left;
-    if (node->left)
+    else
     {
-        node->left->parent = subtree;
+        if (isLeftChild(subtree))
+        {
+            turnRight(subtree->parent);
+        }
+        else
+        {
+            subtree = subtree->parent;
+        }
+        turnLeft(subtree->parent);
+        recolor< BLACK >(subtree);
+        recolor< RED >(subtree->left);
     }
-    subtree->parent = node;
-    node->left = subtree;
 }
 
 template< class Key, class T, class Compare >
@@ -407,6 +414,35 @@ void RedBlackTree< Key, T, Compare >::turnRight(detail::Node< Key, T >* subtree)
     }
     subtree->parent = node;
     node->right = subtree;
+}
+
+template< class Key, class T, class Compare >
+void RedBlackTree< Key, T, Compare >::turnLeft(detail::Node< Key, T >* subtree)
+{
+    detail::Node< Key, T >* node = subtree->right;
+    node->parent = subtree->parent;
+    if (!node->parent)
+    {
+        root_ = node;
+    }
+    if (subtree->parent)
+    {
+        if (isLeftChild(subtree))
+        {
+            subtree->parent->left = node;
+        }
+        else
+        {
+            subtree->parent->right = node;
+        }
+    }
+    subtree->right = node->left;
+    if (node->left)
+    {
+        node->left->parent = subtree;
+    }
+    subtree->parent = node;
+    node->left = subtree;
 }
 
 template< class Key, class T, class Compare >
@@ -739,13 +775,13 @@ detail::Node< Key, T >* RedBlackTree< Key, T, Compare >::getUncle(detail::Node< 
     {
         return nullptr;
     }
-    if (grand->parent == grand->left)
+    if (grand->right == subtree->parent)
     {
-        return grand->right;
+        return grand->left;
     }
     else
     {
-        return grand->left;
+        return grand->right;
     }
 }
 

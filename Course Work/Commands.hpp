@@ -6,8 +6,6 @@
 #include <string>
 #include "RedBlackTree.hpp"
 
-#include <map>
-
 using FrequencyDictionary = RedBlackTree< std::string, size_t >;
 bool parseDictionaryWord(std::string& word);
 
