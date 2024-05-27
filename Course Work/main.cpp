@@ -8,13 +8,9 @@
 
 int main(int argc, char* argv[])
 {
-    if (argc == 2 && argv[1] == "--test")
-    {
-        std::vector< std::string > seq = testSequence();
-        return 0;
-    }
+    std::cout << argc << '\n';
+    std::cout << argv[1] << '\n';
     FrequencyDictionary dict;
-    
     RedBlackTree< std::string, std::function< void(std::istream&) > > cmdsI;
     {
         using namespace std::placeholders;
@@ -27,6 +23,12 @@ int main(int argc, char* argv[])
         using namespace std::placeholders;
         cmdsIO["SEARCH"] = std::bind(cmdSearch, _1, _2, std::cref(dict));
         cmdsIO["MOSTCOMMON"] = std::bind(cmdMostCommon, _1, _2, std::cref(dict));
+    }
+
+    if (argc == 2 && std::string(argv[1]) == "--test")
+    {
+        testDictionary(std::cout, cmdsI, cmdsIO);
+        return 0;
     }
 
     std::string cmd;

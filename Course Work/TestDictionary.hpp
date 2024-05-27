@@ -1,15 +1,13 @@
 #ifndef TEST_DICTIONARY_HPP
 #define TEST_DICTIONARY_HPP
 
-#include <vector>
+#include <functional>
+#include <ostream>
 #include <string>
+#include "RedBlackTree.hpp"
 
-std::vector< std::string > testSequence();
-
-struct A
-{
-    int a_;
-    explicit A(int);
-};
+using ICmds = RedBlackTree< std::string, std::function< void(std::istream&) > >;
+using IOCmds = RedBlackTree< std::string, std::function< void(std::istream&, std::ostream&) > >;
+void testDictionary(std::ostream& out, const ICmds& mapI, const IOCmds& mapIO);
 
 #endif
