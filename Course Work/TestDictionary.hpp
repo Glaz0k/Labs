@@ -6,8 +6,7 @@
 #include <string>
 #include "RedBlackTree.hpp"
 
-using ICmds = RedBlackTree< std::string, std::function< void(std::istream&) > >;
-using IOCmds = RedBlackTree< std::string, std::function< void(std::istream&, std::ostream&) > >;
-void testDictionary(std::ostream& out, const ICmds& mapI, const IOCmds& mapIO);
+using Cmds = RedBlackTree< std::string, std::function< void(std::istream&, std::ostream&) > >;
+void testDictionary(std::ostream& out, const Cmds& map);
 
 #endif

@@ -8,7 +8,7 @@
 
 bool parseDictionaryWord(std::string& word)
 {
-    static const std::regex wordRegex(R"([A-Za-z](([A-Za-z\-']*[A-Za-z])|([A-Za-z]*)))");
+    static const std::regex wordRegex(R"(([A-Za-z][A-Za-z\-']*[A-Za-z])|[IiAa])");
     std::smatch wordMatch;
     if (std::regex_search(word, wordMatch, wordRegex))
     {
@@ -18,7 +18,7 @@ bool parseDictionaryWord(std::string& word)
     return false;
 }
 
-void cmdReadText(std::istream& in, FrequencyDictionary& dict)
+void cmdRead(std::istream& in, std::ostream&, FrequencyDictionary& dict)
 {
     std::string fileName;
     in >> fileName;
@@ -40,59 +40,77 @@ void cmdReadText(std::istream& in, FrequencyDictionary& dict)
     file.close();
 }
 
-void cmdInsert(std::istream& in, FrequencyDictionary& dict)
+void cmdInsert(std::istream& in, std::ostream&, FrequencyDictionary& dict)
 {
     std::string word;
     in >> word;
+    if (!parseDictionaryWord(word))
+    {
+        throw std::invalid_argument("<INVALID WORD>");
+    }
 
     size_t count = 0;
     if (in.peek() == '\n' || !(in >> count) || count == 0)
     {
-        throw std::invalid_argument("<INVALID ARGUMENTS>");
+        throw std::invalid_argument("<INVALID COUNT>");
     }
-
-    if (parseDictionaryWord(word))
+    if (dict.find(word) != dict.end())
     {
-        dict[word] = count;
+        throw std::invalid_argument("<WORD EXIST>");
     }
-    else
-    {
-        throw std::invalid_argument("<INVALID ARGUMENTS>");
-    }
-}
-
-void cmdRemove(std::istream& in, FrequencyDictionary& dict)
-{
-    std::string word;
-    in >> word;
-
-    auto toRemove = dict.find(word);
-    if (toRemove == dict.end())
-    {
-        throw std::invalid_argument("<INVALID ARGUMENTS>");
-    }
-    dict.erase(toRemove);
+    dict[word] = count;
 }
 
 void cmdSearch(std::istream& in, std::ostream& out, const FrequencyDictionary& dict)
 {
     std::string word;
     in >> word;
+    if (!parseDictionaryWord(word))
+    {
+        throw std::invalid_argument("<INVALID WORD>");
+    }
 
     auto toSearch = dict.find(word);
     if (toSearch == dict.cend())
     {
-        throw std::invalid_argument("<INVALID ARGUMENTS>");
+        throw std::invalid_argument("<WORD NOT FOUND>");
     }
     out << (*toSearch).second << '\n';
 }
 
+void cmdDelete(std::istream& in, std::ostream&, FrequencyDictionary& dict)
+{
+    std::string word;
+    in >> word;
+    if (!parseDictionaryWord(word))
+    {
+        throw std::invalid_argument("<INVALID WORD>");
+    }
+
+    auto toRemove = dict.find(word);
+    if (toRemove == dict.end())
+    {
+        throw std::invalid_argument("<WORD NOT FOUND>");
+    }
+    dict.erase(toRemove);
+}
+
+void cmdClear(std::istream&, std::ostream& out, FrequencyDictionary& dict)
+{
+    dict.clear();
+    out << "<DICTIONARY CLEARED>\n";
+}
+
 void cmdMostCommon(std::istream& in, std::ostream& out, const FrequencyDictionary& dict)
 {
+    if (dict.empty())
+    {
+        throw std::invalid_argument("<EMPTY DICTIONARY>");
+    }
     size_t n = 3;
     if ((in.peek() != '\n') && (!(in >> n) || (n == 0)))
     {
-        throw std::invalid_argument("<INVALID ARGUMENTS>");
+        throw std::invalid_argument("<INVALID NUMBER>");
     }
 
     std::vector< std::pair< size_t, std::string > > sorted;
@@ -103,7 +121,7 @@ void cmdMostCommon(std::istream& in, std::ostream& out, const FrequencyDictionar
         sorted.push_back({ p.second, p.first });
     }
     std::sort(sorted.rbegin(), sorted.rend());
-    for (auto it = sorted.cbegin(); (it != sorted.cend()) && n; it++)
+    for (auto it = sorted.cbegin(); (it != sorted.cend()) && n; ++it)
     {
         const auto& p = *it;
         out << p.second << " : " << p.first << '\n';

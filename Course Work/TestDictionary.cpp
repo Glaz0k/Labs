@@ -2,8 +2,10 @@
 #include <sstream>
 #include <vector>
 
-void testDictionary(std::ostream& out, const ICmds& mapI, const IOCmds& mapIO)
+void testDictionary(std::ostream& out, const Cmds& map)
 {
+    out << "\nStarted dictionary test\n";
+
     std::vector< std::string > testLines{
         "SEARCH word\n",
         "REMOVE word\n",
@@ -38,18 +40,11 @@ void testDictionary(std::ostream& out, const ICmds& mapI, const IOCmds& mapIO)
         in >> cmd;
         try
         {
-            if (mapI.find(cmd) != mapI.cend())
-            {
-                mapI.at(cmd)(in);
-            }
-            else if (mapIO.find(cmd) != mapIO.cend())
-            {
-                mapIO.at(cmd)(in, out);
-            }
-            else
-            {
-                out << "<INVALID COMMAND>" << '\n';
-            }
+            map.at(cmd)(in, out);
+        }
+        catch (const std::out_of_range&)
+        {
+            out << "<INVALID COMMAND>\n";
         }
         catch (const std::invalid_argument& e)
         {

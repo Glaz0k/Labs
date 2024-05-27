@@ -47,7 +47,7 @@ void kravchenko::cmdNew(cmd::CmdStreams s, std::map<std::string, FrequencyDictio
     }
 }
 
-void kravchenko::cmdRemove(cmd::CmdStreams s, std::map<std::string, FrequencyDictionary>& data)
+void kravchenko::cmdDelete(cmd::CmdStreams s, std::map<std::string, FrequencyDictionary>& data)
 {
     std::string dictName;
     s.in >> dictName;

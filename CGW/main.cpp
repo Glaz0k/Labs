@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
         using namespace std::placeholders;
         cmds["SCANTEXT"] = std::bind(cmdScanText, _1, std::ref(dictionaries));
         cmds["NEW"] = std::bind(cmdNew, _1, std::ref(dictionaries));
-        cmds["REMOVE"] = std::bind(cmdRemove, _1, std::ref(dictionaries));
+        cmds["REMOVE"] = std::bind(cmdDelete, _1, std::ref(dictionaries));
         cmds["LIST"] = std::bind(cmdList, _1, std::cref(dictionaries));
         cmds["SAVE"] = std::bind(cmdSave, _1, std::cref(dictionaries));
         cmds["FREQ"] = std::bind(cmdFreq, _1, std::cref(dictionaries), std::cref(freqArgs));

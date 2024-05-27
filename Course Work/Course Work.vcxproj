@@ -130,11 +130,13 @@
     <ClCompile Include="Commands.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="TestDictionary.cpp" />
+    <ClCompile Include="TestTree.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Commands.hpp" />
     <ClInclude Include="RedBlackTree.hpp" />
     <ClInclude Include="TestDictionary.hpp" />
+    <ClInclude Include="TestTree.hpp" />
     <ClInclude Include="TreeConstIterator.hpp" />
     <ClInclude Include="TreeIterator.hpp" />
     <ClInclude Include="TreeNode.hpp" />

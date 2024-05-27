@@ -4,30 +4,27 @@
 #include <string>
 #include "Commands.hpp"
 #include "RedBlackTree.hpp"
+#include "TestTree.hpp"
 #include "TestDictionary.hpp"
 
 int main(int argc, char* argv[])
 {
-    std::cout << argc << '\n';
-    std::cout << argv[1] << '\n';
     FrequencyDictionary dict;
-    RedBlackTree< std::string, std::function< void(std::istream&) > > cmdsI;
+    RedBlackTree< std::string, std::function< void(std::istream&, std::ostream&) > > cmds;
     {
         using namespace std::placeholders;
-        cmdsI["READTEXT"] = std::bind(cmdReadText, _1, std::ref(dict));
-        cmdsI["INSERT"] = std::bind(cmdInsert, _1, std::ref(dict));
-        cmdsI["REMOVE"] = std::bind(cmdInsert, _1, std::ref(dict));
-    }
-    RedBlackTree< std::string, std::function< void(std::istream&, std::ostream&) > > cmdsIO;
-    {
-        using namespace std::placeholders;
-        cmdsIO["SEARCH"] = std::bind(cmdSearch, _1, _2, std::cref(dict));
-        cmdsIO["MOSTCOMMON"] = std::bind(cmdMostCommon, _1, _2, std::cref(dict));
+        cmds["READ"] = std::bind(cmdRead, _1, _2, std::ref(dict));
+        cmds["INSERT"] = std::bind(cmdInsert, _1, _2, std::ref(dict));
+        cmds["DELETE"] = std::bind(cmdDelete, _1, _2, std::ref(dict));
+        cmds["SEARCH"] = std::bind(cmdSearch, _1, _2, std::cref(dict));
+        cmds["MOSTCOMMON"] = std::bind(cmdMostCommon, _1, _2, std::cref(dict));
+        cmds["CLEAR"] = std::bind(cmdClear, _1, _2, std::ref(dict));
     }
 
     if (argc == 2 && std::string(argv[1]) == "--test")
     {
-        testDictionary(std::cout, cmdsI, cmdsIO);
+        testTree(std::cout);
+        // testDictionary(std::cout, cmds);
         return 0;
     }
 
@@ -36,18 +33,11 @@ int main(int argc, char* argv[])
     {
         try
         {
-            if (cmdsI.find(cmd) != cmdsI.end())
-            {
-                cmdsI[cmd](std::cin);
-            }
-            else if (cmdsIO.find(cmd) != cmdsIO.end())
-            {
-                cmdsIO[cmd](std::cin, std::cout);
-            }
-            else
-            {
-                std::cout << "<INVALID COMMAND>" << '\n';
-            }
+            cmds.at(cmd)(std::cin, std::cout);
+        }
+        catch (const std::out_of_range&)
+        {
+            std::cout << "<INVALID COMMAND>\n";
         }
         catch (const std::invalid_argument& e)
         {

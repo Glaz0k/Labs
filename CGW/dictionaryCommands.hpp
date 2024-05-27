@@ -37,7 +37,7 @@ namespace kravchenko
     void cmdScanText(cmd::CmdStreams s, std::map< std::string, FrequencyDictionary >& data);
 
     void cmdNew(cmd::CmdStreams s, std::map< std::string, FrequencyDictionary >& data);
-    void cmdRemove(cmd::CmdStreams s, std::map< std::string, FrequencyDictionary >& data);
+    void cmdDelete(cmd::CmdStreams s, std::map< std::string, FrequencyDictionary >& data);
     void cmdList(cmd::CmdStreams s, const std::map< std::string, FrequencyDictionary >& data);
     void cmdSave(cmd::CmdStreams s, const std::map< std::string, FrequencyDictionary >& data);
 
