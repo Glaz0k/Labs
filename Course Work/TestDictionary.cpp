@@ -15,9 +15,9 @@ void testDictionary(std::ostream& out, const Cmds& map)
         "READ 1984.txt\n",
         "SEARCH big\n",
         "SEARCH brother\n",
-        "SEARCH not_existed_word\n",
+        "SEARCH abrakadabra\n",
         "DELETE the\n",
-        "DELETE not_existed_word\n",
+        "DELETE abrakadabra\n",
         "DELETE and\n",
         "INSERT bus 20000\n",
         "INSERT 11234 150\n",
@@ -29,6 +29,7 @@ void testDictionary(std::ostream& out, const Cmds& map)
         "MOSTCOMMON JUNK\n",
         "MOSTCOMMON 0\n",
         "MOSTCOMMON 10\n",
+        "CLEAR\n",
         "MOSTCOMMON 20\n"
     };
 
@@ -51,4 +52,6 @@ void testDictionary(std::ostream& out, const Cmds& map)
             out << e.what() << '\n';
         }
     }
+
+    out << "\nEnded dictionary test\n";
 }

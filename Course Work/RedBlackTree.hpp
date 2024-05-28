@@ -40,7 +40,7 @@ public:
 
     Iterator erase(const Key& key);
     Iterator erase(Iterator pos);
-    ConstIterator erase(ConstIterator pos);
+    Iterator erase(ConstIterator pos);
 
     void swap(RedBlackTree& rhs) noexcept;
     size_t size() const noexcept;
@@ -58,23 +58,6 @@ private:
 
     void clearSubtree(detail::Node< Key, T >* subtree);
 
-    detail::Node< Key, T >* findKey(const Key& key) const ;
-    detail::Node< Key, T >* findToSwap(detail::Node< Key, T >* subtree);
-    detail::Node< Key, T >* getGrand(detail::Node< Key, T >* subtree);
-    detail::Node< Key, T >* getUncle(detail::Node< Key, T >* subtree);
-    detail::Node< Key, T >* getBrother(detail::Node< Key, T >* subtree);
-
-    template< detail::Color C >
-    bool hasColor(detail::Node< Key, T >* node);
-    template< detail::Color C >
-    void recolor(detail::Node< Key, T >* node);
-
-    bool isLeaf(detail::Node< Key, T >* node);
-    bool isLeftChild(detail::Node< Key, T >* node);
-    bool isRightChild(detail::Node< Key, T >* node);
-
-    void turnLeft(detail::Node< Key, T >* subtree);
-    void turnRight(detail::Node< Key, T >* subtree);
 
     void insertBalanceStep1(detail::Node< Key, T >* subtree);
     void insertBalanceStep2(detail::Node< Key, T >* subtree);
@@ -82,11 +65,25 @@ private:
     void insertBalanceStep4(detail::Node< Key, T >* subtree);
     void insertBalanceStep5(detail::Node< Key, T >* subtree);
 
-    void eraseBalance1(detail::Node< Key, T >* subtree);
-    void eraseBalance2(detail::Node< Key, T >* subtree);
-    void eraseBalance3(detail::Node< Key, T >* subtree);
-    void eraseBalance4(detail::Node< Key, T >* subtree);
-    void eraseBalance5(detail::Node< Key, T >* subtree);
+    void turnLeft(detail::Node< Key, T >* subtree);
+    void turnRight(detail::Node< Key, T >* subtree);
+
+    TreeIterator< Key, T > eraseNode1(detail::Node< Key, T >* subtree);
+    TreeIterator< Key, T > eraseNode2(detail::Node< Key, T >* subtree);
+    TreeIterator< Key, T > eraseNode3(detail::Node< Key, T >* subtree);
+    void doubleBlack(detail::Node< Key, T >* subtree);
+
+    template< detail::Color C >
+    bool hasColor(detail::Node< Key, T >* node);
+    template< detail::Color C >
+    void recolor(detail::Node< Key, T >* node);
+    detail::Node< Key, T >* findKey(const Key& key) const;
+    detail::Node< Key, T >* getNext(detail::Node< Key, T >* subtree);
+    detail::Node< Key, T >* getGrand(detail::Node< Key, T >* subtree);
+    detail::Node< Key, T >* getUncle(detail::Node< Key, T >* subtree);
+    detail::Node< Key, T >* getBrother(detail::Node< Key, T >* subtree);
+    bool isLeftChild(detail::Node< Key, T >* node);
+    bool isRightChild(detail::Node< Key, T >* node);
 };
 
 template< class Key, class T, class Compare >
@@ -446,6 +443,163 @@ void RedBlackTree< Key, T, Compare >::turnLeft(detail::Node< Key, T >* subtree)
 }
 
 template< class Key, class T, class Compare >
+TreeIterator< Key, T > RedBlackTree< Key, T, Compare >::erase(Iterator pos)
+{
+    using namespace detail;
+    Node< Key, T >* posNode = pos.node_;
+    Node< Key, T >* toSwap = nullptr;
+    if (posNode->left && posNode->right)
+    {
+        toSwap = getNext(posNode);
+        std::swap(toSwap->data, posNode->data);
+    }
+    else
+    {
+        toSwap = posNode;
+    }
+    --size_;
+    return eraseNode1(toSwap);
+}
+
+template<class Key, class T, class Compare>
+TreeIterator< Key, T > RedBlackTree<Key, T, Compare>::eraseNode1(detail::Node<Key, T>* subtree)
+{
+    if (hasColor< detail::RED >(subtree))
+    {
+        if (isLeftChild(subtree))
+        {
+            subtree->parent->left = nullptr;
+        }
+        else
+        {
+            subtree->parent->right = nullptr;
+        }
+        Iterator next(subtree);
+        ++next;
+        delete subtree;
+        return next;
+    }
+    return eraseNode2(subtree);
+}
+
+template<class Key, class T, class Compare>
+TreeIterator< Key, T > RedBlackTree<Key, T, Compare>::eraseNode2(detail::Node<Key, T>* subtree)
+{
+    detail::Node< Key, T >* child = (subtree->left) ? subtree->left : subtree->right;
+    if (child)
+    {
+        Iterator next(subtree);
+        ++next;
+        if (next.node_ == child)
+        {
+            next = Iterator(subtree);
+        }
+
+        std::swap(subtree->data, child->data);
+        if (subtree->left)
+        {
+            subtree->left = nullptr;
+        }
+        else
+        {
+            subtree->right = nullptr;
+        }
+        delete child;
+        return next;
+    }
+    return eraseNode3(subtree);
+}
+
+template<class Key, class T, class Compare>
+TreeIterator<Key, T> RedBlackTree<Key, T, Compare>::eraseNode3(detail::Node<Key, T>* subtree)
+{
+    Iterator next(subtree);
+    ++next;
+    doubleBlack(subtree);
+    if (subtree == root_)
+    {
+        root_ = nullptr;
+    }
+    else if (isLeftChild(subtree))
+    {
+        subtree->parent->left = nullptr;
+    }
+    else
+    {
+        subtree->parent->right = nullptr;
+    }
+    delete subtree;
+    return next;
+}
+
+template<class Key, class T, class Compare>
+void RedBlackTree<Key, T, Compare>::doubleBlack(detail::Node<Key, T>* subtree)
+{
+    using namespace detail;
+    if (subtree == root_)
+    {
+        return;
+    }
+    Node< Key, T >* brother = getBrother(subtree);
+    if (hasColor< RED >(brother))
+    {
+        recolor< BLACK >(brother);
+        recolor< RED >(subtree->parent);
+        if (isRightChild(brother))
+        {
+            turnLeft(brother->parent);
+        }
+        else
+        {
+            turnRight(brother->parent);
+        }
+        doubleBlack(subtree);
+    }
+    else
+    {
+        bool brotherLeftBlack = (!brother->left || hasColor< BLACK >(brother->left));
+        bool brotherRightBlack = (!brother->right || hasColor< BLACK >(brother->right));
+        if (brotherLeftBlack && brotherRightBlack)
+        {
+            recolor< RED >(brother);
+            if (hasColor< RED >(subtree->parent))
+            {
+                recolor< BLACK >(subtree->parent);
+            }
+            else
+            {
+                doubleBlack(subtree->parent);
+            }
+            return;
+        }
+        if (brotherRightBlack)
+        {
+            recolor< RED >(brother);
+            recolor< BLACK >(brother->left);
+            turnRight(brother);
+        }
+        brother->color = brother->parent->color;
+        recolor< BLACK >(brother->parent);
+        turnLeft(brother->parent);
+        if (brother->right)
+        {
+            recolor< BLACK >(brother->right);
+        }
+    }
+}
+
+template< class Key, class T, class Compare >
+detail::Node< Key, T >* RedBlackTree< Key, T, Compare >::getNext(detail::Node< Key, T >* subtree)
+{
+    subtree = subtree->left;
+    while (subtree->right)
+    {
+        subtree = subtree->right;
+    }
+    return subtree;
+}
+
+template< class Key, class T, class Compare >
 TreeIterator< Key, T > RedBlackTree< Key, T, Compare >::erase(const Key& key)
 {
     Iterator toDelete = find(key);
@@ -457,184 +611,9 @@ TreeIterator< Key, T > RedBlackTree< Key, T, Compare >::erase(const Key& key)
 }
 
 template< class Key, class T, class Compare >
-TreeIterator< Key, T > RedBlackTree< Key, T, Compare >::erase(Iterator pos)
+TreeIterator< Key, T > RedBlackTree< Key, T, Compare >::erase(ConstIterator pos)
 {
-    detail::Node< Key, T >* toDelete = pos.node_;
-    detail::Node< Key, T >* found = findToSwap(toDelete);
-    if (toDelete == root_ && !found)
-    {
-        clear();
-        return end();
-    }
-    else if (!found)
-    {
-        found = toDelete;
-    }
-
-    if (isLeftChild(found))
-    {
-        found->parent->left = found->left;
-    }
-    else if (isRightChild(found))
-    {
-        found->parent->right = found->right;
-    }
-
-    if (found != toDelete)
-    {
-        std::swap(found->data, toDelete->data);
-    }
-
-    eraseBalance1(found);
-    auto iter = ++pos;
-    delete found;
-    --size_;
-    return iter;
-}
-
-template< class Key, class T, class Compare >
-detail::Node< Key, T >* RedBlackTree< Key, T, Compare >::findToSwap(detail::Node< Key, T >* subtree)
-{
-    if (subtree->left)
-    {
-        subtree = subtree->left;
-        while (subtree->right)
-        {
-            subtree = subtree->right;
-        }
-    }
-    else if (subtree->right)
-    {
-        subtree = subtree->right;
-        while (subtree->left)
-        {
-            subtree = subtree->left;
-        }
-    }
-    else
-    {
-        subtree = nullptr;
-    }
-    return subtree;
-}
-
-template< class Key, class T, class Compare >
-TreeConstIterator< Key, T > RedBlackTree< Key, T, Compare >::erase(ConstIterator pos)
-{
-    return ConstIterator(erase(Iterator(pos.node_)));
-}
-
-// Check if erased subtree node is BLACK
-template< class Key, class T, class Compare >
-void RedBlackTree< Key, T, Compare >::eraseBalance1(detail::Node< Key, T >* subtree)
-{
-    using namespace detail;
-    // Deletion of RED node or LEAF has no effect on balance
-    if (hasColor< BLACK >(subtree) && !isLeaf(subtree))
-    {
-        Node< Key, T >* child = (subtree->right) ? subtree->left : subtree->right;
-        if (hasColor< RED >(child))
-        {
-            recolor< BLACK >(child);
-        }
-        else if (subtree->parent)
-        {
-            eraseBalance2(child);
-        }
-    }
-}
-
-// Check if brother of subtree is RED
-template< class Key, class T, class Compare >
-void RedBlackTree< Key, T, Compare >::eraseBalance2(detail::Node< Key, T >* subtree)
-{
-    using namespace detail;
-    Node< Key, T >* brother = getBrother(subtree);
-    // Make turn and recolor new brother BLACK
-    if (hasColor< RED >(brother))
-    {
-        recolor< RED >(subtree->parent);
-        recolor< BLACK >(brother);
-        if (isLeftChild(subtree))
-        {
-            turnLeft(subtree->parent);
-        }
-        else
-        {
-            turnRight(subtree->parent);
-        }
-    }
-    eraseBalance3(subtree);
-}
-
-// Check if all brother's child BLACK
-template< class Key, class T, class Compare >
-void RedBlackTree< Key, T, Compare >::eraseBalance3(detail::Node< Key, T >* subtree)
-{
-    using namespace detail;
-    Node< Key, T >* brother = getBrother(subtree);
-    bool isBrotherBlack = hasColor< BLACK >(brother);
-    bool brotherCondition = isBrotherBlack && hasColor< BLACK >(brother->left) && hasColor< BLACK >(brother->right);
-    if (hasColor< BLACK >(subtree->parent) && brotherCondition)
-    {
-        recolor< RED >(brother);
-        eraseBalance1(subtree->parent);
-    }
-    else if (hasColor< RED >(subtree->parent) && brotherCondition)
-    {
-        recolor< RED >(brother);
-        recolor< BLACK >(subtree->parent);
-    }
-    else
-    {
-        eraseBalance4(subtree);
-    }
-}
-
-// Check which brother's child BLACK and which RED and perform turn
-template< class Key, class T, class Compare >
-void RedBlackTree< Key, T, Compare >::eraseBalance4(detail::Node< Key, T >* subtree)
-{
-    using namespace detail;
-    Node< Key, T >* brother = getBrother(subtree);
-    if (hasColor< BLACK >(brother))
-    {
-        bool isLeftBlack = hasColor< BLACK >(brother->left);
-        bool isRightBlack = hasColor< BLACK >(brother->right);
-        if (isLeftChild(subtree) && !isLeftBlack && isRightBlack)
-        {
-            recolor< RED >(brother);
-            recolor< BLACK >(brother->left);
-            turnRight(brother);
-        }
-        else if (isRightChild(subtree) && isLeftBlack && !isRightBlack)
-        {
-            recolor< RED >(brother);
-            recolor< BLACK >(brother->right);
-            turnLeft(brother);
-        }
-    }
-    eraseBalance5(subtree);
-}
-
-// Recolor and perform last turn
-template< class Key, class T, class Compare >
-void RedBlackTree< Key, T, Compare >::eraseBalance5(detail::Node< Key, T >* subtree)
-{
-    using namespace detail;
-    Node< Key, T >* brother = getBrother(subtree);
-    brother->color = subtree->parent->color;
-    recolor< BLACK >(subtree->parent);
-    if (isLeftChild(subtree))
-    {
-        recolor< BLACK >(brother->right);
-        turnLeft(subtree->parent);
-    }
-    else
-    {
-        recolor< BLACK >(brother->left);
-        turnRight(subtree->parent);
-    }
+    return erase(Iterator(pos.node_));
 }
 
 template< class Key, class T, class Compare >
@@ -734,12 +713,6 @@ template< detail::Color C >
 void RedBlackTree< Key, T, Compare >::recolor(detail::Node< Key, T >* node)
 {
     node->color = C;
-}
-
-template< class Key, class T, class Compare >
-bool RedBlackTree< Key, T, Compare >::isLeaf(detail::Node< Key, T >* node)
-{
-    return !(node->left && node->right);
 }
 
 template<class Key, class T, class Compare>
