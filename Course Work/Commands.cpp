@@ -2,21 +2,8 @@
 #include <algorithm>
 #include <fstream>
 #include <limits>
-#include <regex>
 #include <utility>
 #include <vector>
-
-bool parseDictionaryWord(std::string& word)
-{
-    static const std::regex wordRegex(R"(([A-Za-z][A-Za-z\-']*[A-Za-z])|[IiAa])");
-    std::smatch wordMatch;
-    if (std::regex_search(word, wordMatch, wordRegex))
-    {
-        word = wordMatch.str();
-        return true;
-    }
-    return false;
-}
 
 void cmdRead(std::istream& in, std::ostream&, FrequencyDictionary& dict)
 {
@@ -32,7 +19,7 @@ void cmdRead(std::istream& in, std::ostream&, FrequencyDictionary& dict)
     std::string word;
     while (file >> word)
     {
-        if (parseDictionaryWord(word))
+        if (parseDictWord< true >(word))
         {
             dict[word]++;
         }
@@ -44,7 +31,7 @@ void cmdInsert(std::istream& in, std::ostream&, FrequencyDictionary& dict)
 {
     std::string word;
     in >> word;
-    if (!parseDictionaryWord(word))
+    if (!parseDictWord< false >(word))
     {
         throw std::invalid_argument("<INVALID WORD>");
     }
@@ -65,7 +52,7 @@ void cmdSearch(std::istream& in, std::ostream& out, const FrequencyDictionary& d
 {
     std::string word;
     in >> word;
-    if (!parseDictionaryWord(word))
+    if (!parseDictWord< false >(word))
     {
         throw std::invalid_argument("<INVALID WORD>");
     }
@@ -82,7 +69,7 @@ void cmdDelete(std::istream& in, std::ostream&, FrequencyDictionary& dict)
 {
     std::string word;
     in >> word;
-    if (!parseDictionaryWord(word))
+    if (!parseDictWord< false >(word))
     {
         throw std::invalid_argument("<INVALID WORD>");
     }
