@@ -1,5 +1,4 @@
 #include "TestTree.hpp"
-#include "RedBlackTree.hpp"
 #include <algorithm>
 
 void outputTree(RedBlackTree<int, bool>& tree, std::ostream& out)
@@ -25,14 +24,22 @@ void testTree(std::ostream& out)
     test[8];
     test[9];
     test[10];
+    test.printRBwidth(out);
+    out << '\n';
 
     test.erase(5);
+    test.printRBwidth(out);
+    out << '\n';
     test[5];
     test[11];
     test[12];
+    test.printRBwidth(out);
+    out << '\n';
 
     test.erase(10);
     test.erase(3);
+    test.printRBwidth(out);
+    out << '\n';
     test.clear();
 
     RedBlackTree<int, bool> emptyT;

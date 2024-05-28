@@ -7,6 +7,10 @@
 #include "TreeConstIterator.hpp"
 #include "TreeIterator.hpp"
 
+// For width out
+#include <queue>
+#include <ostream>
+
 template< class Key, class T, class Compare = std::less< Key > >
 class RedBlackTree
 {
@@ -51,6 +55,8 @@ public:
     T& at(const Key& key);
     const T& at(const Key& key) const;
     T& operator[](const Key& key);
+
+    void printRBwidth(std::ostream& out) const;
 private:
     detail::Node< Key, T >* root_;
     Compare cmp_;
@@ -74,7 +80,7 @@ private:
     void doubleBlack(detail::Node< Key, T >* subtree);
 
     template< detail::Color C >
-    bool hasColor(detail::Node< Key, T >* node);
+    bool hasColor(const detail::Node< Key, T >* node) const;
     template< detail::Color C >
     void recolor(detail::Node< Key, T >* node);
     detail::Node< Key, T >* findKey(const Key& key) const;
@@ -703,7 +709,7 @@ T& RedBlackTree< Key, T, Compare >::operator[](const Key& key)
 
 template< class Key, class T, class Compare >
 template< detail::Color C >
-bool RedBlackTree< Key, T, Compare >::hasColor(detail::Node< Key, T >* node)
+bool RedBlackTree< Key, T, Compare >::hasColor(const detail::Node< Key, T >* node) const
 {
     return (node->color == C);
 }
@@ -769,6 +775,37 @@ detail::Node< Key, T >* RedBlackTree< Key, T, Compare >::getBrother(detail::Node
     {
         return subtree->parent->left;
     }
+}
+
+template<class Key, class T, class Compare>
+void RedBlackTree<Key, T, Compare>::printRBwidth(std::ostream& out) const
+{
+    using namespace detail;
+    std::queue< Node< Key, T >* > widthQueue;
+    widthQueue.push(root_);
+    size_t currRow = 1;
+    size_t nextRow = 0;
+    while (!widthQueue.empty())
+    {
+        Node< Key, T >* topNode = widthQueue.front();
+        if (topNode)
+        {
+            out << '(' 
+                << ((hasColor< BLACK >(topNode)) ? "B" : "R")
+                << " : " << topNode->data.first << ") ";
+            widthQueue.push(topNode->left);
+            widthQueue.push(topNode->right);
+            nextRow += 2;
+        }
+        widthQueue.pop();
+        if (!--currRow)
+        {
+            out << '\n';
+            currRow = nextRow;
+            nextRow = 0;
+        }
+    }
+    out << '\n';
 }
 
 #endif
