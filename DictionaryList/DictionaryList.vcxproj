@@ -30,6 +30,7 @@
     <ProjectGuid>{d8ffab08-23ce-4163-939c-ee24c2827934}</ProjectGuid>
     <RootNamespace>DictionaryList</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>1. DictionaryList</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

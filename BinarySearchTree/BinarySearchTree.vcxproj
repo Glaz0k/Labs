@@ -30,6 +30,7 @@
     <ProjectGuid>{27f7d062-e476-42cc-bb12-4b0bfb1f8322}</ProjectGuid>
     <RootNamespace>BinarySearchTree</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>3. BinarySearchTree</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

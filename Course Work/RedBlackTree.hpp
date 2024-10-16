@@ -7,10 +7,6 @@
 #include "TreeConstIterator.hpp"
 #include "TreeIterator.hpp"
 
-// For width out
-#include <queue>
-#include <ostream>
-
 template< class Key, class T, class Compare = std::less< Key > >
 class RedBlackTree
 {
@@ -55,15 +51,12 @@ public:
     T& at(const Key& key);
     const T& at(const Key& key) const;
     T& operator[](const Key& key);
-
-    void printRBwidth(std::ostream& out) const;
 private:
     detail::Node< Key, T >* root_;
     Compare cmp_;
     size_t size_;
 
     void clearSubtree(detail::Node< Key, T >* subtree);
-
 
     void insertBalanceStep1(detail::Node< Key, T >* subtree);
     void insertBalanceStep2(detail::Node< Key, T >* subtree);
@@ -775,37 +768,6 @@ detail::Node< Key, T >* RedBlackTree< Key, T, Compare >::getBrother(detail::Node
     {
         return subtree->parent->left;
     }
-}
-
-template<class Key, class T, class Compare>
-void RedBlackTree<Key, T, Compare>::printRBwidth(std::ostream& out) const
-{
-    using namespace detail;
-    std::queue< Node< Key, T >* > widthQueue;
-    widthQueue.push(root_);
-    size_t currRow = 1;
-    size_t nextRow = 0;
-    while (!widthQueue.empty())
-    {
-        Node< Key, T >* topNode = widthQueue.front();
-        if (topNode)
-        {
-            out << '(' 
-                << ((hasColor< BLACK >(topNode)) ? "B" : "R")
-                << " : " << topNode->data.first << ") ";
-            widthQueue.push(topNode->left);
-            widthQueue.push(topNode->right);
-            nextRow += 2;
-        }
-        widthQueue.pop();
-        if (!--currRow)
-        {
-            out << '\n';
-            currRow = nextRow;
-            nextRow = 0;
-        }
-    }
-    out << '\n';
 }
 
 #endif

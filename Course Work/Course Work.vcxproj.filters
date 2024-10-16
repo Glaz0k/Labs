@@ -18,13 +18,7 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TestDictionary.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Commands.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="TestTree.cpp">
+    <ClCompile Include="commands.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -41,13 +35,7 @@
     <ClInclude Include="TreeNode.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Commands.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="TestDictionary.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="TestTree.hpp">
+    <ClInclude Include="commands.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -59,15 +47,6 @@
       <Filter>Resource Files</Filter>
     </Text>
     <Text Include="crime-and-punishment.txt">
-      <Filter>Resource Files</Filter>
-    </Text>
-    <Text Include="my-soviet-passport.txt">
-      <Filter>Resource Files</Filter>
-    </Text>
-    <Text Include="evgeny-onegin.txt">
-      <Filter>Resource Files</Filter>
-    </Text>
-    <Text Include="smells-like-teen-spirit.txt">
       <Filter>Resource Files</Filter>
     </Text>
   </ItemGroup>

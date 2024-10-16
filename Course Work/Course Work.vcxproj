@@ -24,6 +24,7 @@
     <ProjectGuid>{fba15ebb-6593-4f98-b68c-dad0760cad52}</ProjectGuid>
     <RootNamespace>CourseWork</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>5. CourseWork</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -127,16 +128,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Commands.cpp" />
+    <ClCompile Include="commands.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="TestDictionary.cpp" />
-    <ClCompile Include="TestTree.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Commands.hpp" />
+    <ClInclude Include="commands.hpp" />
     <ClInclude Include="RedBlackTree.hpp" />
-    <ClInclude Include="TestDictionary.hpp" />
-    <ClInclude Include="TestTree.hpp" />
     <ClInclude Include="TreeConstIterator.hpp" />
     <ClInclude Include="TreeIterator.hpp" />
     <ClInclude Include="TreeNode.hpp" />
@@ -144,9 +141,6 @@
   <ItemGroup>
     <Text Include="1984.txt" />
     <Text Include="crime-and-punishment.txt" />
-    <Text Include="evgeny-onegin.txt" />
-    <Text Include="my-soviet-passport.txt" />
-    <Text Include="smells-like-teen-spirit.txt" />
     <Text Include="war-and-peace.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

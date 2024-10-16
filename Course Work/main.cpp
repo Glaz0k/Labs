@@ -3,10 +3,8 @@
 #include <iostream>
 #include <cstring>
 #include <string>
-#include "Commands.hpp"
+#include "commands.hpp"
 #include "RedBlackTree.hpp"
-#include "TestTree.hpp"
-#include "TestDictionary.hpp"
 
 int main(int argc, char* argv[])
 {
@@ -20,13 +18,6 @@ int main(int argc, char* argv[])
         cmds["SEARCH"] = std::bind(cmdSearch, _1, _2, std::cref(dict));
         cmds["MOSTCOMMON"] = std::bind(cmdMostCommon, _1, _2, std::cref(dict));
         cmds["CLEAR"] = std::bind(cmdClear, _1, _2, std::ref(dict));
-    }
-
-    if (argc == 2 && std::strcmp(argv[1], "--test") == 0)
-    {
-        testTree(std::cout);
-        testDictionary(std::cout, cmds);
-        return 0;
     }
 
     std::string cmd;
